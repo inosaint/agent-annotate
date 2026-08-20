@@ -40,6 +40,11 @@ const ok = (name, cond) => { assert.ok(cond, name); console.log('  ok  ' + name)
   ok('fires when a batch is sent', got && got.length === 2);
   ok('reports only the new batch', got.map(a => a.id).join() === 'new1,new2');
 
+  ok('a capture is described as one, not as a missing target',
+    describe({ page: 'index.html', shot: 'shots/a1.png', text: 'this bit' }, 0)
+      .includes('a captured region'));
+  ok('and points at the image', describe({ shot: 'shots/a1.png', text: 'x' }, 0).includes('SHOT: shots/a1.png'));
+
   const text = got.map(describe).join('\n');
   ok('the printout carries the target', text.includes('section > h3'));
   ok('the printout carries the context and facts', text.includes('heading · 24px · 5 words'));

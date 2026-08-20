@@ -587,7 +587,11 @@
   function view(p,i){
     closePops();
     const pop=document.createElement('div'); pop.className='an-pop';
-    const bits=(p.intents||[]).map(t=>`<span class="an-chip on">${esc(t.label)}</span>`).join('');
+    // a note saved from chips alone has text that *is* the chips; printing both is
+    // the same sentence twice
+    const synth=(p.intents||[]).map(t=>t.label).join('; ');
+    const bits=p.text===synth?''
+      :(p.intents||[]).map(t=>`<span class="an-chip on">${esc(t.label)}</span>`).join('');
     pop.innerHTML=`<div class="an-facts"><span class="an-kind">#${i+1}${
         p.context?' '+esc(p.context.label):''}</span> ${esc(p.target||'')}</div>
       <div class="an-read">${esc(p.text)}</div>

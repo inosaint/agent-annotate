@@ -199,9 +199,15 @@ global `fetch`).
 - The plugin ships the server, so the skill must reach for
   `$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js` before `npx` — a plugin that only works
   once the npm package is published is not deliverable.
-- Shots land in `<store>-shots/`. That is inside the served root in the normal case,
-  which is what makes them fetchable back into the toolbar; when `--store` points
-  elsewhere the thumbnails will not load, though the agent still reads them off disk.
+- Everything written lives in `<root>/.annotate/` — queue, resolved log, agent log,
+  shots — and that folder writes its own `.gitignore` containing `*` the first time a
+  note is saved. **Never touch the user's `.gitignore`**: a tool that edits a file the
+  project tracks to keep its own droppings out of git has the relationship backwards.
+  Nothing is written until there is something to write. A root `annotations.json` from
+  before this layout keeps being used, so an in-flight project does not lose its queue.
+- The toolbar gets `shotBase` in its config — the URL path the shots are served from,
+  or `''` when `--store` puts them outside the served root, in which case thumbnails
+  degrade and the agent still reads the files off disk.
 - `package.json`'s `files` array gates the tarball. A new top-level directory needs
   adding there or it will not publish. Check with `npm pack --dry-run`.
 - Editing the workflow (routes, flags, the resolve rule) means editing

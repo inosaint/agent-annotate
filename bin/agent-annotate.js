@@ -20,7 +20,7 @@ if (has('--help') || has('-h')) {
   Options
     --root <dir>      directory to serve            (default: cwd)
     --port <n>        port, 0 picks a free one      (default: 8765)
-    --store <file>    annotations file              (default: <root>/annotations.json)
+    --store <file>    annotations file  (default: <root>/.annotate/annotations.json)
     --index <file>    directory index               (default: index.html)
     --ignore <a,b>    runtime-only classes to keep out of selectors
     --wait            do not serve: block until the next batch is sent, print it
@@ -44,8 +44,10 @@ if (has('--help') || has('-h')) {
 /* --wait: no server, just block until the user presses send */
 if (has('--wait')) {
   const { waitForBatch, describe } = require('../lib/wait');
+  const root = path.resolve(opt('root', process.cwd()));
+  const legacy = path.join(root, 'annotations.json');
   const store = path.resolve(opt('store', null) ||
-    path.join(path.resolve(opt('root', process.cwd())), 'annotations.json'));
+    (require('fs').existsSync(legacy) ? legacy : path.join(root, '.annotate', 'annotations.json')));
   if (!has('--quiet')) console.error(`  waiting for a batch  →  ${store}`);
   waitForBatch({
     store,

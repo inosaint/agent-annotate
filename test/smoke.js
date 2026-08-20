@@ -7,6 +7,8 @@ const path = require('path');
 const { createServer } = require('../lib/server');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-annotate-'));
+// everything the server writes goes in one self-ignoring folder under the root
+const home = path.join(root, '.annotate');
 fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html><body><h1>hi</h1></body>');
 fs.writeFileSync(path.join(os.tmpdir(), 'SECRET.txt'), 'do not serve me');
 
@@ -31,16 +33,21 @@ server.listen(0, async () => {
 
     const client = await fetch(base + '/__annotate/client.js').then(r => r.text());
     ok('serves the toolbar with its config', client.includes('window.__ANNOTATE_CONFIG'));
+    ok('tells the toolbar where the shots are served from', client.includes('"shotBase":"/.annotate/shots"'));
     ok('bundles the element-context table ahead of the toolbar',
       client.indexOf('window.__ANNOTATE_CONTEXT') < client.indexOf('an-bar'));
 
     ok('starts with an empty queue', (await j('/__annotations')).length === 0);
+    ok('writes nothing before there is a note', !fs.existsSync(home));
 
     const post = await j('/__annotations', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: 'make it wobbly', target: 'h1', page: 'index.html' })
     });
     ok('accepts a note', post.ok && post.id);
+    ok('keeps its working state in one folder', fs.existsSync(path.join(home, 'annotations.json')));
+    ok('and that folder ignores itself',
+      fs.readFileSync(path.join(home, '.gitignore'), 'utf8').trim().endsWith('*'));
 
     const bad = await fetch(base + '/__annotations', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -114,7 +121,7 @@ server.listen(0, async () => {
     ok('reports how the run went', status.configured && status.last.code === 0 && !status.last.error);
     ok('hands back what the command said', status.last.report.includes(post.id));
     ok('keeps a log of agent runs next to the store',
-      fs.readFileSync(path.join(root, 'annotations-agent.log'), 'utf8').includes(post.id));
+      fs.readFileSync(path.join(home, 'annotations-agent.log'), 'utf8').includes(post.id));
 
     /* a captured region rides along with its note */
     const png = Buffer.from(
@@ -123,8 +130,8 @@ server.listen(0, async () => {
     const shot = await fetch(base + '/__annotations/shot?id=' + ctx.id, {
       method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png
     }).then(r => r.json());
-    ok('saves a shot beside its note', shot.ok && shot.shot === path.join('annotations-shots', ctx.id + '.png'));
-    ok('writes the file', fs.readFileSync(path.join(root, 'annotations-shots', ctx.id + '.png')).equals(png));
+    ok('saves a shot beside its note', shot.ok && shot.shot === path.join('shots', ctx.id + '.png'));
+    ok('writes the file', fs.readFileSync(path.join(home, 'shots', ctx.id + '.png')).equals(png));
     ok('records it on the note', (await j('/__annotations')).find(a => a.id === ctx.id).shot === shot.shot);
 
     const orphan = await fetch(base + '/__annotations/shot?id=../../escape', {
@@ -146,7 +153,7 @@ server.listen(0, async () => {
     ok('resolves the note', res.ok && res.resolved === 2);
     ok('empties the live queue', (await j('/__annotations')).length === 0);
 
-    const done = JSON.parse(fs.readFileSync(path.join(root, 'annotations-resolved.json'), 'utf8'));
+    const done = JSON.parse(fs.readFileSync(path.join(home, 'annotations-resolved.json'), 'utf8'));
     ok('logs it as resolved', done.length === 2 && done[0].status === 'resolved' && done[0].resolved);
 
     /* a command that fails has to be visible, not swallowed */
@@ -187,6 +194,14 @@ server.listen(0, async () => {
     ok('says plainly when no command is configured',
       nHand.ok && nHand.sent === 1 && nHand.configured === false && nHand.ran === false);
     failing.close(); noHook.close();
+
+    /* a project that already has a store from an older version keeps using it */
+    const oldRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-annotate-legacy-'));
+    fs.writeFileSync(path.join(oldRoot, 'annotations.json'), '[]');
+    const legacy = createServer({ root: oldRoot, quiet: true });
+    ok('leaves an existing store where it is',
+      legacy.store === path.join(oldRoot, 'annotations.json'));
+    ok('and does not start a folder beside it', !fs.existsSync(path.join(oldRoot, '.annotate')));
 
     const esc = await fetch(base + '/../SECRET.txt');
     ok('refuses to serve outside the root', esc.status === 404 || esc.status === 403);

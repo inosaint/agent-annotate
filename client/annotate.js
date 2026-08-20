@@ -589,9 +589,9 @@
 
   /* keep a panel fully inside the viewport: clamp both axes, flip above if it would
      hang off the bottom */
-  // shots are written next to the store; when that sits inside the served root — the
-  // normal case — the same path fetches them back
-  const shotURL=p=>'/'+String(p.shot).replace(/\\/g,'/');
+  // the server tells us where the shots are served from; empty means they live outside
+  // the served root and cannot be shown, though the agent still reads them off disk
+  const shotURL=p=>CFG.shotBase?CFG.shotBase+'/'+p.id+'.png':'';
 
   function place(pop,px,py){
     glassFor(pop,pop.dataset.glass||'anGlassPop',17);
@@ -612,7 +612,7 @@
     const synth=(p.intents||[]).map(t=>t.label).join('; ');
     const bits=p.text===synth?''
       :(p.intents||[]).map(t=>`<span class="an-chip on">${esc(t.label)}</span>`).join('');
-    pop.innerHTML=`${p.shot?`<img class="an-thumb" src="${esc(shotURL(p))}" alt="">`:''}
+    pop.innerHTML=`${p.shot&&shotURL(p)?`<img class="an-thumb" src="${esc(shotURL(p))}" alt="">`:''}
       <div class="an-facts"><span class="an-kind">#${i+1}${
         p.shot?' capture':p.context?' '+esc(p.context.label):''}</span> ${esc(p.target||'')}</div>
       <div class="an-read">${esc(p.text)}</div>

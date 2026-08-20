@@ -34,7 +34,7 @@ back and stored as JSON next to your project:
   "x": 278, "y": 1398,
   "viewport": "1446x703",
   "theme": "light",
-  "shot": "annotations-shots/amsyvcaio2ij.png",
+  "shot": "shots/amsyvcaio2ij.png",
   "context": {
     "kind": "heading", "label": "heading", "tag": "h3",
     "facts": ["412×38", "24px/1.2 600", "rgb(20, 22, 26)", "5 words"]
@@ -90,7 +90,7 @@ and what register of change you are asking for, not just where you clicked.
 ```
 --root <dir>      directory to serve            (default: cwd)
 --port <n>        port, 0 picks a free one      (default: 8765)
---store <file>    annotations file              (default: <root>/annotations.json)
+--store <file>    annotations file       (default: <root>/.annotate/annotations.json)
 --index <file>    directory index               (default: index.html)
 --ignore <a,b>    runtime-only classes to keep out of selectors
 --wait            block until the next batch, print it, exit (for an agent

@@ -1,7 +1,6 @@
 node_modules/
+.annotate/
 annotations.json
 annotations-resolved.json
-annotations-agent.log
-annotations-shots/
 .DS_Store
 *.tgz

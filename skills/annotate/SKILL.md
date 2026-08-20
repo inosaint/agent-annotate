@@ -64,7 +64,7 @@ Whatever it prints comes back to a panel on the page and to `annotations-agent.l
 
 ## Reading the notes
 
-Notes land in `annotations.json` at the project root:
+Notes land in `.annotate/annotations.json`:
 
 ```json
 { "text": "make these lines wobbly",
@@ -82,7 +82,7 @@ coordinates — together they tell you *what* the user meant, which is the whole
 `theme` and `viewport` matter when a note only applies in dark mode or at one width.
 
 A note may also carry **`shot`** — a PNG of a region the user dragged, written next to
-the store (`annotations-shots/<id>.png`). **Read that image before deciding anything.**
+the store (`.annotate/shots/<id>.png`). **Read that image before deciding anything.**
 A capture is deliberately bare: the picture, whatever they typed, and nothing else —
 no `target`, no `context`, no `intents`. Work out what it is about from the image.
 It is what they were actually looking at, and a captured region usually carries what
@@ -189,14 +189,11 @@ do one, say so and leave it open.
 
 ## Housekeeping
 
-Both JSON files are local working state, not site content. Add them to `.gitignore`:
+Everything the tool writes is local working state, not site content — and it is all in
+one self-ignoring folder:
 
-```
-annotations.json
-annotations-resolved.json
-annotations-agent.log
-annotations-shots/
-```
+Nothing: `.annotate/` contains its own `.gitignore`. Do not add these paths to the
+user's `.gitignore`, and do not move them out of that folder.
 
 ## Notes
 

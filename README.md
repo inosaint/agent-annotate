@@ -1,63 +1,31 @@
 # agent-annotate
 
+The missing component for your agentic engineering workflow while working with Claude terminal app and developing HTML pages. (if you are building react apps, check out [Agentation](agentation.com))
+
+<img width="652" height="449" alt="Screenshot 2026-08-20 at 8 48 24 AM" src="https://github.com/user-attachments/assets/8015e109-ae3c-4580-b059-3d1be582a8f4" />
+
+Describing *which* thing you mean is the slow part of design iteration. The current meta is referring to it and taking screenshots to be specific. Codex and Claude desktop apps have a built-in annotator to help you debug, but for the terminal, I don't see a similar solution so I asked Claude to create one for me.
+
+## How this works
+
+Once you install the plugin(and reload), you can call it by `/agent-annotate:annotate` in your Claude Code terminal app.
+
+This wil start a local server and hosts your simple HTML and provides the URL. It also leaves `--wait`
+running in the background, so the notes you send land in the conversation you are
+already having rather than in a log. 
+
+
+## How to use
+
+At the bottom right of the page, you will notice a tiny toolbar which you can use to annotate the page.
+
 Click any element on your local site, say what should change, and your coding agent
 reads the note — with the element it points at, what kind of element it is, the page,
 the viewport and the theme attached.
 
-Describing *which* thing you mean is the slow part of design iteration. This removes it.
+Once done, you can click 'send to agent' or the 'send' icon at the annotation level to get Claude working on your annotations.
 
-```bash
-npx agent-annotate --root .
-```
-
-Open the URL it prints, press **A**, click something, type. That's the loop.
-
-The popup reads the element you clicked and offers controls that fit it: click a
-paragraph and you get tone and length; click a flex container and you get flow,
-alignment and spacing; click a button and you get emphasis, size and state. Pick a
-couple of chips and you have a complete note without typing a word.
-
-No framework, no build step, and **no changes to your project's source** — the toolbar
-is injected into HTML responses by the dev server, so nothing can leak into production.
-
-## How it works
-
-The server serves your directory and adds one script tag to each HTML response. The
-toolbar refuses to load anywhere except `localhost` / `127.0.0.1`. Notes are POSTed
-back and stored as JSON next to your project:
-
-```json
-{
-  "text": "make these lines wobbly",
-  "target": "section.mo > h3",
-  "page": "index.html",
-  "x": 278, "y": 1398,
-  "viewport": "1446x703",
-  "theme": "light",
-  "context": {
-    "kind": "heading", "label": "heading", "tag": "h3",
-    "facts": ["412×38", "24px/1.2 600", "rgb(20, 22, 26)", "5 words"]
-  },
-  "intents": [
-    { "id": "tone", "label": "tone: punchier" },
-    { "id": "length", "label": "length: shorter" }
-  ],
-  "id": "amsyvcaio2ij",
-  "created": "2026-08-18T16:20:07.104Z",
-  "status": "open"
-}
-```
-
-`target` and `x`/`y` are what make a note actionable — an agent can find the element
-rather than guess at your prose. `theme` and `viewport` capture notes that only apply
-in dark mode or at one width.
-
-`context` is the element read off the live page: its `kind` (one of `heading`, `text`,
-`layout`, `action`, `field`, `list`, `table`, `image`, `icon`, `graphic`, `media`,
-`page`, `element`) and `facts` measured at the moment of the click — box size, computed
-`display` and `gap`, font size and colour, word count, a missing `alt`. `intents` are
-the chips you picked, in plain words. Between them, an agent knows what the thing is
-and what register of change you are asking for, not just where you clicked.
+Note: Text below this is written by Claude.
 
 ## Using it
 
@@ -100,29 +68,6 @@ Notes are worth acting on once you say they are, so the list has a **send to age
 button, and each note has one of its own. Sending marks those notes `"status":
 "ready"` — a note you are still typing is never in that set.
 
-**If an agent is already in a conversation with you** — a Claude Code session you are
-working in — it should block on this in the background:
-
-```bash
-npx agent-annotate --wait --root .
-```
-
-That serves nothing. It waits until you press the button, prints the batch, and exits,
-which is what puts the notes in front of the agent you are already talking to. It has
-your context, you can see it work, and you can argue with it. This is the path worth
-using.
-
-**If nobody is watching**, `--agent` starts a fresh headless Claude Code per batch
-instead:
-
-```bash
-npx agent-annotate --root . --agent
-```
-
-It gets the batch, the store and every measured fact in its prompt, edits the project
-it is serving, and resolves what it finished. Whatever it says comes back to a panel
-on the page and to `annotations-agent.log`. The trade is that it starts cold every
-time.
 
 ### Triage
 
@@ -211,19 +156,5 @@ server.listen(8765);
 | `GET /__annotations/handoff` | is a run in flight, and how the last one went |
 | `POST /__annotations/resolve` | `{ids:[…]}`, or all when omitted |
 | `GET /__annotate/client.js` | the toolbar |
-
-## Notes
-
-- The toolbar is a glass bar in the bottom-right corner, drawn in icons rather than
-  words. Arming it gives you a hover inspector — the element under the cursor outlines
-  with its size, and the popup carries a breadcrumb so a click that lands on the wrong
-  node can be walked up.
-- It follows `data-theme` on `<html>` when your page sets one, and the OS otherwise.
-- The refraction uses `backdrop-filter: url(…)`, which only Chromium honours; other
-  browsers get plain frosted glass.
-- Pins are anchored by page coordinate. If the page gets shorter, a pin that no longer
-  fits is greyed as `stale` — the position drifted, but its `target` is still good.
-- Intended for local development only. It is a dev server: it has no auth, and it
-  writes files in the directory you point it at.
 
 MIT

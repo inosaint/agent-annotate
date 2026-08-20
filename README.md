@@ -2,8 +2,6 @@
 
 The missing component for your agentic engineering workflow while working with Claude terminal app and developing HTML pages. (if you are building react apps, check out [Agentation](agentation.com))
 
-<img width="652" height="449" alt="Screenshot 2026-08-20 at 8 48 24 AM" src="https://github.com/user-attachments/assets/8015e109-ae3c-4580-b059-3d1be582a8f4" />
-
 Describing *which* thing you mean is the slow part of design iteration. The current meta is referring to it and taking screenshots to be specific. Codex and Claude desktop apps have a built-in annotator to help you debug, but for the terminal, I don't see a similar solution so I asked Claude to create one for me.
 
 ## How this works
@@ -19,9 +17,16 @@ already having rather than in a log.
 
 At the bottom right of the page, you will notice a tiny toolbar which you can use to annotate the page.
 
-Click any element on your local site, say what should change, and your coding agent
-reads the note — with the element it points at, what kind of element it is, the page,
-the viewport and the theme attached.
+<img width="173" height="68" alt="Screenshot 2026-08-20 at 1 24 08 PM" src="https://github.com/user-attachments/assets/25b23573-db07-435c-8cd5-62ac8daff128" />
+
+
+1. **With the annotate tool**: Click on the annotate icon (or type A to enable) and then click any element on your local site, say what should change, and your coding agent reads the note — with the element it points at, what kind of element it is, the page, the viewport and the theme attached.
+
+<img width="652" height="449" alt="Screenshot 2026-08-20 at 8 48 24 AM" src="https://github.com/user-attachments/assets/8015e109-ae3c-4580-b059-3d1be582a8f4" />
+
+3. **With the camera tool**: Click the Camera icon in the tool(or type S to enable) and then capture a screenshot of your page. You may need to provide screenshare permissions to capture the image. Once captured, you can added the changes you want to provide.
+
+<img width="813" height="635" alt="Screenshot 2026-08-20 at 1 17 56 PM" src="https://github.com/user-attachments/assets/3b6cfd12-7e5d-4538-abf0-e9a714f25ad1" />
 
 Once done, you can click 'send to agent' or the 'send' icon at the annotation level to get Claude working on your annotations.
 

@@ -50,6 +50,7 @@
     notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 15.5A1.5 1.5 0 0 1 18.5 17H8l-4 3.5V5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5Z"/><path d="M8 8.5h8M8 12h5"/></svg>',
     send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 11 13"/><path d="M20.5 3.5 14.2 20.5l-3.2-7.4-7.5-3.1z"/></svg>',
     edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 6.5 17.5 9.5"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.7"/><path d="M6.5 6.5 7.4 19a1.2 1.2 0 0 0 1.2 1.1h6.8a1.2 1.2 0 0 0 1.2-1.1l.9-12.5"/><path d="M10.3 10v6.3M13.7 10v6.3"/></svg>',
     check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
     x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
   };
@@ -419,7 +420,7 @@
         (ready?'<span class="an-tag sent">sent</span>'
               :kind?`<span class="an-tag">${esc(kind)}</span>`:'')+
         `<span>${esc(p.text)}</span><span class="an-acts">
-          <span class="ic" data-a="del" title="Delete">${I.x}</span></span>`;
+          <span class="ic" data-a="del" title="Delete this note">${I.trash}</span></span>`;
       li.querySelector('.ic').onclick=async e=>{
         e.stopPropagation();
         await fetch(API+'?id='+encodeURIComponent(p.id),{method:'DELETE'});

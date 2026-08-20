@@ -71,7 +71,7 @@ and what register of change you are asking for, not just where you clicked.
 | `Esc` | cancel |
 | chips | pick the change: `tone: warmer`, `side by side`, `tap target too small` |
 | breadcrumb | the click landed on the wrong node — walk up the tree |
-| list icon | every note on this page; `✕` deletes a row |
+| list icon | every note on this page; the bin deletes a row |
 | **send to agent** | at the top of the list — hands the whole batch over |
 | click a pin | read that note back, then edit it or send it on its own |
 

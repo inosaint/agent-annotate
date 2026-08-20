@@ -116,6 +116,29 @@ server.listen(0, async () => {
     ok('keeps a log of agent runs next to the store',
       fs.readFileSync(path.join(root, 'annotations-agent.log'), 'utf8').includes(post.id));
 
+    /* a captured region rides along with its note */
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64');
+    const shot = await fetch(base + '/__annotations/shot?id=' + ctx.id, {
+      method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png
+    }).then(r => r.json());
+    ok('saves a shot beside its note', shot.ok && shot.shot === path.join('annotations-shots', ctx.id + '.png'));
+    ok('writes the file', fs.readFileSync(path.join(root, 'annotations-shots', ctx.id + '.png')).equals(png));
+    ok('records it on the note', (await j('/__annotations')).find(a => a.id === ctx.id).shot === shot.shot);
+
+    const orphan = await fetch(base + '/__annotations/shot?id=../../escape', {
+      method: 'POST', headers: { 'Content-Type': 'image/png' }, body: png
+    });
+    ok('refuses a shot for a note that does not exist', orphan.status === 404);
+    ok('and writes nothing outside the shots directory',
+      !fs.existsSync(path.join(os.tmpdir(), 'escape.png')));
+
+    const notPng = await fetch(base + '/__annotations/shot?id=' + ctx.id, {
+      method: 'POST', headers: { 'Content-Type': 'image/png' }, body: Buffer.from('not an image at all')
+    });
+    ok('refuses a body that is not a png', notPng.status === 400);
+
     const res = await j('/__annotations/resolve', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: [post.id, ctx.id] })

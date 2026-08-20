@@ -36,8 +36,8 @@ Useful flags: `--port <n>` (default 8765, `--port 0` for any free port),
 `--store <file>`, `--index <file>`, `--ignore <a,b>` for classes the app adds at
 runtime that would only add noise to selectors.
 
-Tell the user the URL, that **A** arms the picker, and that the notes list has a
-**send to agent** button.
+Tell the user the URL, that **A** arms the picker, **S** captures a region by dragging
+over it, and that the notes list has a **send to agent** button.
 
 **2. Wait for a batch:**
 
@@ -80,6 +80,12 @@ Notes land in `annotations.json` at the project root:
 `target` is a short CSS-ish path to the clicked element and `x`/`y` are page
 coordinates — together they tell you *what* the user meant, which is the whole point.
 `theme` and `viewport` matter when a note only applies in dark mode or at one width.
+
+A note may also carry **`shot`** — a PNG of a region the user dragged, written next to
+the store (`annotations-shots/<id>.png`). **Read that image before deciding anything.**
+It is what they were actually looking at, and a captured region usually carries what
+the words could not: which of four similar cards, where the spacing collapses, what
+the misalignment looks like.
 `theme` is the page's own `data-theme` when it sets one, otherwise what the OS was
 asking for at the time.
 
@@ -186,6 +192,8 @@ Both JSON files are local working state, not site content. Add them to `.gitigno
 ```
 annotations.json
 annotations-resolved.json
+annotations-agent.log
+annotations-shots/
 ```
 
 ## Notes

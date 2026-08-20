@@ -90,6 +90,20 @@ only command this server ever executes, so it is CLI-only by design — no confi
 sets it, and nothing the page can POST can change it. The child gets `ANNOTATE_IDS`
 and `ANNOTATE_STORE` in its environment and inherits stdio unless `--quiet`.
 
+**Region capture goes through `getDisplayMedia`, and there is no better option.**
+A page cannot read its own pixels: rasterising live DOM to a canvas misses iframes,
+shadow content, filters and font rendering, and every library that claims otherwise is
+approximating. So `client/shot.js` asks the browser to capture the tab and crops the
+dragged rectangle out of the frame. The consequences are not bugs: the first capture
+raises a picker (the track is kept alive so a run of captures asks once), only the
+viewport can be captured, and the toolbar hides itself for the frame. If someone
+"fixes" this with a canvas rasteriser, the shots stop matching what the user saw.
+
+**The shot route trusts the note, not the caller.** The id in the query must match a
+note already in the store, and the filename is built from that id — so a traversal
+attempt is a 404 rather than a write. The body must start with the PNG magic number.
+`test/smoke.js` covers both.
+
 **A handoff must never be a silent no-op.** The button's promise is that something
 happens, so: batches run one at a time (two agents on the same files is worse than
 waiting), the outcome of the last run is readable at `GET /__annotations/handoff`,
@@ -146,6 +160,7 @@ bin/agent-annotate.js         CLI, arg parsing only
 lib/server.js                 server + programmatic API (createServer)
 lib/agent.js                  the built-in --agent handoff: prompt and tool list
 client/context.js             what kind of element was clicked, and which controls suit it
+client/shot.js                region capture via getDisplayMedia, cropped to the drag
 client/annotate.js            the toolbar, served at /__annotate/client.js
 skills/annotate/SKILL.md      Claude Code skill — teaches an agent the workflow
 .claude-plugin/plugin.json    plugin manifest; the package doubles as a CC plugin
@@ -181,6 +196,9 @@ global `fetch`).
 - The plugin ships the server, so the skill must reach for
   `$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js` before `npx` — a plugin that only works
   once the npm package is published is not deliverable.
+- Shots land in `<store>-shots/`. That is inside the served root in the normal case,
+  which is what makes them fetchable back into the toolbar; when `--store` points
+  elsewhere the thumbnails will not load, though the agent still reads them off disk.
 - `package.json`'s `files` array gates the tarball. A new top-level directory needs
   adding there or it will not publish. Check with `npm pack --dry-run`.
 - Editing the workflow (routes, flags, the resolve rule) means editing

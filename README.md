@@ -34,6 +34,7 @@ back and stored as JSON next to your project:
   "x": 278, "y": 1398,
   "viewport": "1446x703",
   "theme": "light",
+  "shot": "annotations-shots/amsyvcaio2ij.png",
   "context": {
     "kind": "heading", "label": "heading", "tag": "h3",
     "facts": ["412×38", "24px/1.2 600", "rgb(20, 22, 26)", "5 words"]
@@ -52,6 +53,10 @@ back and stored as JSON next to your project:
 rather than guess at your prose. `theme` and `viewport` capture notes that only apply
 in dark mode or at one width.
 
+`shot` appears when you dragged a region: a PNG written next to the store, which the
+agent reads before deciding anything. Some feedback is unsayable — *this* card, not
+those three; the way the spacing collapses here — and a picture ends the argument.
+
 `context` is the element read off the live page: its `kind` (one of `heading`, `text`,
 `layout`, `action`, `field`, `list`, `table`, `image`, `icon`, `graphic`, `media`,
 `page`, `element`) and `facts` measured at the moment of the click — box size, computed
@@ -65,7 +70,8 @@ and what register of change you are asking for, not just where you clicked.
 
 | | |
 |---|---|
-| `A` | arm annotate mode |
+| `A` | arm the picker |
+| `S` | capture a region — drag over the part you mean |
 | click | drop a pin on that element |
 | `Cmd`/`Ctrl` + `Enter` | save |
 | `Esc` | cancel |
@@ -207,6 +213,7 @@ server.listen(8765);
 | `POST /__annotations` | add one (`text` required) |
 | `PATCH /__annotations?id=` | edit one's text |
 | `DELETE /__annotations?id=` | drop one |
+| `POST /__annotations/shot?id=` | PNG body → save it beside the note |
 | `POST /__annotations/handoff` | `{ids:[…]}` → mark `ready`, start the agent |
 | `GET /__annotations/handoff` | is a run in flight, and how the last one went |
 | `POST /__annotations/resolve` | `{ids:[…]}`, or all when omitted |

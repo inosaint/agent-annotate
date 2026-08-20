@@ -50,6 +50,7 @@
     notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 15.5A1.5 1.5 0 0 1 18.5 17H8l-4 3.5V5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5Z"/><path d="M8 8.5h8M8 12h5"/></svg>',
     send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 11 13"/><path d="M20.5 3.5 14.2 20.5l-3.2-7.4-7.5-3.1z"/></svg>',
     edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 6.5 17.5 9.5"/></svg>',
+    camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.7l1.2-2.1a1 1 0 0 1 .9-.5h5.4a1 1 0 0 1 .9.5L16.8 7h2.7A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/><circle cx="12" cy="13" r="3.4"/></svg>',
     trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.7"/><path d="M6.5 6.5 7.4 19a1.2 1.2 0 0 0 1.2 1.1h6.8a1.2 1.2 0 0 0 1.2-1.1l.9-12.5"/><path d="M10.3 10v6.3M13.7 10v6.3"/></svg>',
     check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
     x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
@@ -144,6 +145,20 @@
   .an-hltag b{color:var(--an-accent);font-weight:600}
   .an-hltag span{color:var(--an-dim);margin-left:6px}
 
+  .an-shot-dim{position:fixed;inset:0;z-index:2147483003;background:rgba(12,14,20,.42);
+    cursor:crosshair}
+  .an-shot-box{position:fixed;z-index:2147483004;display:none;pointer-events:none;
+    border:1.5px solid #FF7A52;background:rgba(255,122,82,.1);border-radius:2px;
+    box-shadow:0 0 0 9999px rgba(12,14,20,.28)}
+  .an-shot-tip{position:fixed;z-index:2147483005;left:50%;top:22px;transform:translateX(-50%);
+    pointer-events:none;padding:7px 12px;border-radius:999px;background:rgba(18,20,26,.86);
+    color:#f3f4f7;font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.04em;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .an-hidden{opacity:0 !important;transition:none !important}
+  .an-pop .an-thumb{display:block;width:100%;margin:0 0 8px;border-radius:9px;
+    border:1px solid var(--an-hair);background:rgba(127,127,127,.12)}
+  .an-pin.shot::after{content:'';position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;
+    border-radius:50%;background:#f3f4f7;border:1.5px solid #C4442A}
   .an-pin{position:absolute;z-index:2147482000;box-sizing:border-box;
     width:24px;height:24px;margin:-12px 0 0 -12px;
     display:flex;align-items:center;justify-content:center;
@@ -352,6 +367,7 @@
   bar.className='an-bar';
   bar.innerHTML=`<button id="anList" title="Notes on this page" aria-label="Notes">${I.notes}
       <span class="an-count" id="anCount" hidden>0</span></button>
+    <button id="anShot" title="Capture a region — press S" aria-label="Capture">${I.camera}</button>
     <button id="anTog" title="Inspect and annotate — press A" aria-label="Inspect">${I.inspect}</button>`;
   document.body.appendChild(bar);
   const list=document.createElement('ul'); list.className='an-list'; document.body.appendChild(list);
@@ -413,7 +429,7 @@
       p.stale = p.y > docH-8;
       if(p.stale) p.y = Math.min(p.y, docH-24);
       const el=document.createElement('div');
-      el.className='an-pin'+(p.status==='done'?' done':'')+(p.stale?' stale':'');
+      el.className='an-pin'+(p.status==='done'?' done':'')+(p.stale?' stale':'')+(p.shot?' shot':'');
       el.style.left=p.x+'px'; el.style.top=p.y+'px'; el.style.pointerEvents='auto';
       el.textContent=i+1; el.title=(p.stale?'[position stale] ':'')+p.text;
       el.onclick=e=>{e.stopPropagation();view(p,i);};
@@ -573,6 +589,10 @@
 
   /* keep a panel fully inside the viewport: clamp both axes, flip above if it would
      hang off the bottom */
+  // shots are written next to the store; when that sits inside the served root — the
+  // normal case — the same path fetches them back
+  const shotURL=p=>'/'+String(p.shot).replace(/\\/g,'/');
+
   function place(pop,px,py){
     glassFor(pop,pop.dataset.glass||'anGlassPop',17);
     const w=pop.offsetWidth, h=pop.offsetHeight, m=10;
@@ -592,7 +612,8 @@
     const synth=(p.intents||[]).map(t=>t.label).join('; ');
     const bits=p.text===synth?''
       :(p.intents||[]).map(t=>`<span class="an-chip on">${esc(t.label)}</span>`).join('');
-    pop.innerHTML=`<div class="an-facts"><span class="an-kind">#${i+1}${
+    pop.innerHTML=`${p.shot?`<img class="an-thumb" src="${esc(shotURL(p))}" alt="">`:''}
+      <div class="an-facts"><span class="an-kind">#${i+1}${
         p.context?' '+esc(p.context.label):''}</span> ${esc(p.target||'')}</div>
       <div class="an-read">${esc(p.text)}</div>
       ${bits?`<div class="an-ctl" style="margin-top:8px">${bits}</div>`:''}
@@ -609,7 +630,7 @@
   }
 
   /* ---- the annotate popup ---- */
-  function inspect(el,x,y,note){
+  function inspect(el,x,y,note,shot){
     closePops();
     sel=el;
     const pop=document.createElement('div'); pop.className='an-pop';
@@ -631,7 +652,8 @@
         : `<button class="an-chip" data-id="${c.id}">${esc(c.label)}</button>`;
       const chain=chainOf(sel);
       const snip=snippet(sel);
-      pop.innerHTML=`${note?`<div class="an-facts" style="margin-bottom:5px">
+      pop.innerHTML=`${shot?`<img class="an-thumb" src="${shot.dataURL}" alt="">`:''}${
+        note?`<div class="an-facts" style="margin-bottom:5px">
           <span class="an-kind">editing</span> was “${esc(note.text)}”</div>`:''}
         <div class="an-crumbs">${chain.map((n,i)=>
           `${i?'<span class="an-sep">›</span>':''}<button class="an-crumb${
@@ -701,6 +723,7 @@
           (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')};
       if(ctx) rec.context={kind:ctx.kind,label:ctx.label,tag:ctx.tag,role:ctx.role,facts:ctx.facts};
       if(picked.length) rec.intents=picked;
+      if(!note&&shot) rec.shot=true;      // filled in by the upload below
       if(note){
         const r=await fetch(API+'?id='+encodeURIComponent(note.id),{method:'PATCH',
           headers:{'Content-Type':'application/json'},
@@ -710,13 +733,50 @@
       } else {
         const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify(rec)}).then(r=>r.json()).catch(()=>null);
-        if(r&&r.ok){ rec.id=r.id; pins.push(rec); }
+        if(r&&r.ok){
+          rec.id=r.id;
+          if(shot) rec.shot=await uploadShot(r.id,shot)||undefined;
+          pins.push(rec);
+        }
       }
       render();
       done();
     }
 
     paint();
+  }
+
+  /* ---- capture a region ----
+     Drag, then a note popup opens on that region with the shot attached. The upload
+     waits for the note to exist, so a capture the user abandons leaves no file. */
+  const SHOT=window.__ANNOTATE_SHOT;
+  let pending=null;                        // {dataURL,width,height} awaiting a note id
+
+  async function capture(){
+    if(!SHOT||!SHOT.supported()) return toast('this browser cannot capture the tab',true);
+    arm(false); closePops();
+    const rect=await SHOT.select();
+    if(!rect) return;
+    // our own chrome must not be in the frame
+    const chrome=[bar,list,...document.querySelectorAll('.an-pop,.an-hl,.an-hltag')];
+    chrome.forEach(n=>n.classList.add('an-hidden'));
+    let shot=null;
+    try { shot=await SHOT.grab(rect); }
+    catch(e){ toast(/denied|abort/i.test(e.message)?'capture cancelled':'capture failed: '+e.message,true); }
+    finally { chrome.forEach(n=>n.classList.remove('an-hidden')); }
+    if(!shot) return;
+    pending=shot;
+    // the element under the middle of the selection is what the note is about
+    const el=document.elementFromPoint(rect.x+rect.w/2,rect.y+rect.h/2);
+    inspect(el&&!el.closest(OURS)?el:document.body,
+      rect.x+scrollX, rect.y+rect.h+scrollY, null, shot);
+  }
+
+  async function uploadShot(id,shot){
+    const bin=await fetch(shot.dataURL).then(r=>r.blob());
+    const r=await fetch(API+'/shot?id='+encodeURIComponent(id),
+      {method:'POST',headers:{'Content-Type':'image/png'},body:bin}).then(r=>r.json()).catch(()=>null);
+    return r&&r.ok?r.shot:null;
   }
 
   /* ---- arming ---- */
@@ -729,6 +789,7 @@
     if(!on && !document.querySelector('.an-pop')) unhighlight();
   }
   document.getElementById('anTog').onclick=()=>arm(!armed);
+  document.getElementById('anShot').onclick=capture;
   document.getElementById('anList').onclick=()=>{
     list.classList.toggle('show');
     if(list.classList.contains('show')) glassFor(list,'anGlassList',17);
@@ -743,6 +804,7 @@
   addEventListener('keydown',e=>{
     if(e.target.matches&&e.target.matches('textarea,input,select')) return;
     if(e.key==='a'||e.key==='A') arm(!armed);
+    if(e.key==='s'||e.key==='S') capture();
     if(e.key==='Escape'){ arm(false); closePops(); sel=null; unhighlight(); }
   });
   addEventListener('click',e=>{

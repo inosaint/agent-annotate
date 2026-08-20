@@ -193,6 +193,29 @@ server.listen(0, async () => {
     }).then(r => r.json());
     ok('says plainly when no command is configured',
       nHand.ok && nHand.sent === 1 && nHand.configured === false && nHand.ran === false);
+    ok('and that nobody is waiting either', nHand.waiting === false);
+
+    /* a session blocked on --wait is listening, even with no command configured */
+    const wRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-annotate-wait-'));
+    const wHome = path.join(wRoot, '.annotate');
+    const watched = createServer({ root: wRoot, quiet: true });
+    await new Promise(r => watched.listen(0, r));
+    const wBase = 'http://localhost:' + watched.address().port;
+    const wNote = await fetch(wBase + '/__annotations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'note', page: 'index.html' })
+    }).then(r => r.json());
+    fs.writeFileSync(path.join(wHome, 'waiting.json'), JSON.stringify({ pid: process.pid }));
+    const wHand = await fetch(wBase + '/__annotations/handoff', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [wNote.id] })
+    }).then(r => r.json());
+    ok('sees an agent that is blocked on --wait', wHand.waiting === true);
+
+    fs.writeFileSync(path.join(wHome, 'waiting.json'), JSON.stringify({ pid: 2 ** 30 }));
+    const dead = await fetch(wBase + '/__annotations/handoff').then(r => r.json());
+    ok('and not one that has been killed', dead.waiting === false);
+    watched.close();
     failing.close(); noHook.close();
 
     /* a project that already has a store from an older version keeps using it */

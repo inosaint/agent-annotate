@@ -19,6 +19,10 @@ const ok = (name, cond) => { assert.ok(cond, name); console.log('  ok  ' + name)
   let got = null;
   const waiting = waitForBatch({ store, poll: 30, onBatch: n => { got = n; } });
 
+  await new Promise(r => setTimeout(r, 60));
+  const stand = JSON.parse(fs.readFileSync(path.join(dir, 'waiting.json'), 'utf8'));
+  ok('says on disk that an agent is waiting', stand.pid === process.pid && stand.since);
+
   await new Promise(r => setTimeout(r, 120));
   ok('does not fire on notes that were already sent', got === null);
 
@@ -38,6 +42,7 @@ const ok = (name, cond) => { assert.ok(cond, name); console.log('  ok  ' + name)
   ]);
   await waiting;
   ok('fires when a batch is sent', got && got.length === 2);
+  ok('and stops saying it is waiting once it has one', !fs.existsSync(path.join(dir, 'waiting.json')));
   ok('reports only the new batch', got.map(a => a.id).join() === 'new1,new2');
 
   ok('a capture is described as one, not as a missing target',

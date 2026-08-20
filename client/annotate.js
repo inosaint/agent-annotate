@@ -465,9 +465,14 @@
     pins.forEach(p=>{ if(ids.includes(p.id)) p.status='ready'; });
     render();
     const n=ids.length+(ids.length===1?' note':' notes');
-    // never claim work started when nothing is wired up to start it
-    if(!r.configured) return toast(n+' marked ready — but no --on-handoff is configured, '+
-      'so nothing was started',true);
+    // never claim work started when nothing is listening — but a session blocked on
+    // --wait is listening, even though the server runs no command for it
+    if(!r.configured){
+      return r.waiting
+        ? toast(n+' sent — the waiting agent has it')
+        : toast(n+' marked ready, but nothing is listening: run `agent-annotate --wait`'+
+            ' or restart the server with --agent',true);
+    }
     toast(n+' sent — agent working'+(r.queued?' (queued behind '+r.queued+')':''));
     watchRun(ids);
   }

@@ -144,9 +144,12 @@
   .an-hltag b{color:var(--an-accent);font-weight:600}
   .an-hltag span{color:var(--an-dim);margin-left:6px}
 
-  .an-pin{position:absolute;z-index:2147482000;width:24px;height:24px;margin:-12px 0 0 -12px;
+  .an-pin{position:absolute;z-index:2147482000;box-sizing:border-box;
+    width:24px;height:24px;margin:-12px 0 0 -12px;
+    display:flex;align-items:center;justify-content:center;
     border-radius:50%;background:linear-gradient(160deg,#ef7050,#C4442A);color:#fff;
-    font:600 11px/24px ui-monospace,monospace;text-align:center;cursor:pointer;
+    font:600 11px/1 ui-monospace,monospace;font-variant-numeric:tabular-nums;
+    padding-left:.5px;cursor:pointer;
     border:1.5px solid rgba(255,255,255,.9);
     box-shadow:0 4px 14px rgba(196,68,42,.45),inset 0 1px 0 rgba(255,255,255,.55);
     transition:transform .18s}
@@ -232,22 +235,24 @@
   .an-list{position:fixed;right:16px;bottom:66px;z-index:2147483000;width:320px;max-height:min(52vh,420px);
     overflow:auto;padding:4px;border-radius:17px;display:none;margin:0}
   .an-list.show{display:block}
-  .an-list li{list-style:none;padding:8px 9px;border-bottom:1px solid var(--an-hair);display:flex;gap:8px;
-    align-items:flex-start;cursor:pointer;border-radius:11px}
+  .an-list li{list-style:none;padding:8px 10px;border-bottom:1px solid var(--an-hair);display:flex;
+    gap:8px;align-items:baseline;cursor:pointer;border-radius:11px}
   .an-list li:last-child{border-bottom:0}
   .an-list li:not(.an-send-all):not(.an-empty):hover{background:rgba(255,255,255,.42)}
   
   .an-list li.an-empty{cursor:default;color:var(--an-dim);justify-content:center;padding:16px 12px;
     text-align:center;line-height:1.6}
-  .an-list b{color:var(--an-accent);font-weight:600;flex:none}
+  .an-list b{color:var(--an-accent);font-weight:600;flex:none;min-width:12px;
+    font-variant-numeric:tabular-nums}
   .an-list .an-send-all{position:sticky;top:0;z-index:1;display:flex;gap:7px;align-items:center;
-    justify-content:center;padding:9px;margin:0 0 2px;border-radius:12px;cursor:pointer;
+    justify-content:center;padding:10px;margin:0 0 4px;border-radius:11px;cursor:pointer;
+    line-height:1;text-indent:.08em;
     border-bottom:0;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
     color:#fff;text-shadow:none;background:linear-gradient(160deg,#e0613e,var(--an-accent));
     box-shadow:0 3px 14px rgba(196,68,42,.4),inset 0 1px 0 rgba(255,255,255,.4)}
   .an-list .an-send-all:hover{filter:brightness(1.07)}
-  .an-list .an-send-all svg{width:13px;height:13px}
-  .an-list .an-acts{margin-left:auto;flex:none;display:flex;gap:2px}
+  .an-list .an-send-all svg{width:13px;height:13px;display:block;flex:none}
+  .an-list .an-acts{margin-left:auto;flex:none;display:flex;gap:2px;align-self:center}
   .an-list .an-acts .ic{opacity:.45;display:grid;place-items:center;width:20px;height:20px;
     border-radius:6px;cursor:pointer}
   .an-list .an-acts .ic svg{width:12px;height:12px}
@@ -255,7 +260,7 @@
   
   .an-list li.sent b{color:var(--an-dim)}
   .an-list .an-tag.sent{background:linear-gradient(160deg,#5b9a85,#3F6B5C);color:#fff;text-shadow:none}
-  .an-list .an-tag{flex:none;font-size:9px;padding:1px 6px;border-radius:999px;
+  .an-list .an-tag{flex:none;font-size:9px;padding:1px 6px;border-radius:999px;text-indent:.06em;
     background:rgba(255,255,255,.5);color:var(--an-dim);letter-spacing:.06em;text-transform:uppercase}
   
   .an-list .x{margin-left:auto;flex:none;opacity:.45;display:grid;place-items:center}

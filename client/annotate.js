@@ -155,8 +155,11 @@
     color:#f3f4f7;font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.04em;
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
   .an-hidden{opacity:0 !important;transition:none !important}
-  .an-pop .an-thumb{display:block;width:100%;margin:0 0 8px;border-radius:9px;
-    border:1px solid var(--an-hair);background:rgba(127,127,127,.12)}
+  .an-pop .an-thumb{display:block;width:100%;max-height:46vh;object-fit:contain;margin:0 0 8px;
+    border-radius:9px;border:1px solid var(--an-hair);background:rgba(127,127,127,.12)}
+  .an-pop.an-review{width:min(460px,calc(100vw - 48px))}
+  .an-review-back{position:fixed;inset:0;z-index:2147483000;background:rgba(12,14,20,.45);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
   .an-pin.shot::after{content:'';position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;
     border-radius:50%;background:#f3f4f7;border:1.5px solid #C4442A}
   .an-pin{position:absolute;z-index:2147482000;box-sizing:border-box;
@@ -593,6 +596,12 @@
   // the served root and cannot be shown, though the agent still reads them off disk
   const shotURL=p=>CFG.shotBase?CFG.shotBase+'/'+p.id+'.png':'';
 
+  function centre(pop){
+    glassFor(pop,pop.dataset.glass||'anGlassPop',17);
+    pop.style.left=Math.round(scrollX+Math.max(10,(innerWidth-pop.offsetWidth)/2))+'px';
+    pop.style.top =Math.round(scrollY+Math.max(10,(innerHeight-pop.offsetHeight)/2))+'px';
+  }
+
   function place(pop,px,py){
     glassFor(pop,pop.dataset.glass||'anGlassPop',17);
     const w=pop.offsetWidth, h=pop.offsetHeight, m=10;
@@ -774,11 +783,18 @@
       <textarea placeholder="Anything to say about it? (optional)"></textarea>
       <div class="btns"><button data-a="cancel" title="Discard (Esc)">${I.x}</button>
       <button class="primary" data-a="save" title="Save (Cmd/Ctrl+Enter)">${I.check}</button></div>`;
+    // the capture is a modal moment: keep the page dimmed and sit in the middle of it,
+    // rather than trailing a selection the user has stopped looking at
+    const back=document.createElement('div'); back.className='an-review-back';
+    document.body.appendChild(back);
+    pop.classList.add('an-review');
     document.body.appendChild(pop);
     const x=rect.x+scrollX, y=rect.y+rect.h+scrollY;
-    place(pop,x,y);
+    centre(pop);
     const ta=pop.querySelector('textarea'); ta.focus();
-    const close=()=>pop.remove();
+    const img=pop.querySelector('img'); if(img) img.onload=()=>centre(pop);
+    addEventListener('resize',()=>{ if(pop.isConnected) centre(pop); });
+    const close=()=>{ pop.remove(); back.remove(); };
     const save=async()=>{
       const rec={text:ta.value.trim()||'see the capture',x,y,page:pageId(),
         viewport:innerWidth+'x'+innerHeight,

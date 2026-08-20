@@ -73,8 +73,7 @@
       --an-cast:0 10px 34px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35);
       border-color:rgba(255,255,255,.2);text-shadow:0 1px 0 rgba(0,0,0,.3)}
   ${p} .an-bar button:hover{background:rgba(255,255,255,.16)}
-  ${p} .an-bar .an-count{background:rgba(255,255,255,.14);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+  ${p} .an-bar .an-count{box-shadow:0 1px 5px rgba(0,0,0,.5),0 0 0 1.5px rgba(22,24,30,.75)}
   ${p} .an-hltag{--an-frost:rgba(16,18,24,.9)}
   ${p} .an-pop .an-crumb:hover{background:rgba(255,255,255,.16)}
   ${p} .an-pop .an-sel,${p} .an-pop .an-chip{border-color:rgba(255,255,255,.18);
@@ -123,11 +122,12 @@
   .an-bar button:active{transform:scale(.94)}
   .an-bar button.on{background:linear-gradient(160deg,#e0613e,var(--an-accent));color:#fff;
     text-shadow:none;box-shadow:0 3px 14px rgba(196,68,42,.5),inset 0 1px 0 rgba(255,255,255,.45)}
-  .an-bar .an-count{min-width:22px;height:22px;margin:0 3px 0 7px;border-radius:999px;padding:0 6px;
-    display:grid;place-items:center;font-size:10px;font-weight:600;
-    background:rgba(255,255,255,.5);color:var(--an-dim);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
-  
-  .an-bar .an-count.has{background:linear-gradient(160deg,#e0613e,var(--an-accent));color:#fff;text-shadow:none}
+  .an-bar #anList{position:relative;overflow:visible}
+  .an-bar .an-count{position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;padding:0 4px;
+    border-radius:999px;display:grid;place-items:center;font-size:9px;font-weight:600;
+    background:linear-gradient(160deg,#e0613e,var(--an-accent));color:#fff;text-shadow:none;
+    box-shadow:0 1px 5px rgba(196,68,42,.5),0 0 0 1.5px rgba(255,255,255,.55)}
+  .an-bar .an-count[hidden]{display:none}
   .an-armed, .an-armed *{cursor:crosshair !important}
   /* while probing for the element under a pin, our own chrome must not answer */
   html.an-probe .an-bar,html.an-probe .an-list,html.an-probe .an-pin{pointer-events:none!important}
@@ -345,8 +345,8 @@
 
   const bar=document.createElement('div');
   bar.className='an-bar';
-  bar.innerHTML=`<span class="an-count" id="anCount">0</span>
-    <button id="anList" title="Notes on this page" aria-label="Notes">${I.notes}</button>
+  bar.innerHTML=`<button id="anList" title="Notes on this page" aria-label="Notes">${I.notes}
+      <span class="an-count" id="anCount" hidden>0</span></button>
     <button id="anTog" title="Inspect and annotate — press A" aria-label="Inspect">${I.inspect}</button>`;
   document.body.appendChild(bar);
   const list=document.createElement('ul'); list.className='an-list'; document.body.appendChild(list);
@@ -379,7 +379,7 @@
 
   function render(){
     const c=document.getElementById('anCount');
-    c.textContent=pins.length; c.classList.toggle('has',pins.length>0);
+    c.textContent=pins.length>99?'99+':pins.length; c.hidden=!pins.length;
     [...layer.children].forEach(n=>n.remove());
     list.innerHTML='';
     if(!pins.length){

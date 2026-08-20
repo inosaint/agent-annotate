@@ -4,6 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const http = require('http');
 const { createServer } = require('../lib/server');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-annotate-'));
@@ -228,6 +229,40 @@ server.listen(0, async () => {
 
     const esc = await fetch(base + '/../SECRET.txt');
     ok('refuses to serve outside the root', esc.status === 404 || esc.status === 403);
+
+    /* the user's own secrets, in the directory they pointed this at */
+    fs.mkdirSync(path.join(root, '.git'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.git', 'HEAD'), 'ref: refs/heads/main');
+    fs.writeFileSync(path.join(root, '.env'), 'DB_PASSWORD=hunter2');
+    fs.writeFileSync(path.join(root, '.npmrc'), '_authToken=npm_secret');
+    for (const secret of ['.env', '.git/HEAD', '.npmrc']) {
+      const r = await fetch(base + '/' + secret);
+      ok('refuses to serve ' + secret, r.status === 403);
+    }
+    ok('still serves its own folder', (await fetch(base + '/.annotate/annotations.json')).status !== 403);
+
+    /* a page on another origin must not be able to read notes or start an agent */
+    ok('sends no wildcard CORS header',
+      !(await fetch(base + '/__annotations')).headers.get('access-control-allow-origin'));
+    const foreign = await fetch(base + '/__annotations', { headers: { Origin: 'https://evil.example' } });
+    ok('refuses a cross-origin read', foreign.status === 403);
+    const foreignHandoff = await fetch(base + '/__annotations/handoff', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' },
+      body: JSON.stringify({})
+    });
+    ok('refuses a cross-origin handoff', foreignHandoff.status === 403);
+    const own = await fetch(base + '/__annotations', { headers: { Origin: base } });
+    ok('allows the toolbar itself', own.status === 200);
+
+    /* DNS rebinding: the address resolves to us, the name does not. fetch() refuses
+       to set Host, so ask over a socket. */
+    const rebound = await new Promise(resolve => {
+      const r = http.request({ host: '127.0.0.1', port: server.address().port, path: '/',
+        headers: { Host: 'evil.example' } }, res2 => resolve(res2.statusCode));
+      r.on('error', () => resolve(0));
+      r.end();
+    });
+    ok('refuses a request that arrives under another hostname', rebound === 403);
 
     console.log(`\n  ${pass} passed\n`);
     server.close(() => process.exit(0));

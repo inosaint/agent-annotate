@@ -52,6 +52,7 @@ Note: Text below this is written by Claude.
 ```
 --root <dir>      directory to serve            (default: cwd)
 --port <n>        port, 0 picks a free one      (default: 8765)
+--host <addr>     interface to bind        (default: 127.0.0.1, loopback only)
 --store <file>    annotations file       (default: <root>/.annotate/annotations.json)
 --index <file>    directory index               (default: index.html)
 --ignore <a,b>    runtime-only classes to keep out of selectors
@@ -196,6 +197,25 @@ npm.
 The skill lives in `skills/annotate/`, and is invoked as `/agent-annotate:annotate`.
 It is what teaches an agent to triage a batch, act on it, and resolve only what it
 actually finished.
+
+## What it exposes
+
+It is a dev server, so it is worth being precise about what it will and will not do:
+
+- **Loopback only.** It binds `127.0.0.1`, so nothing on your network can reach it.
+  `--host 0.0.0.0` opts out and prints a warning; only do that on a network you trust.
+- **No CORS.** The toolbar is served by this server and talks to it same-origin. A
+  request carrying another origin is refused — otherwise any page you happened to have
+  open could read your notes, or POST a handoff that starts an agent with edit rights
+  on your project.
+- **Requests arriving under another hostname are refused**, which is what stops a
+  hostile name resolved to `127.0.0.1` from talking to it.
+- **Dotted paths are not served** — `.git`, `.env`, `.npmrc` and the like stay private,
+  even though the server is pointed at your project root. Its own `.annotate/` folder
+  is the exception, so captures can be shown back to you.
+- **It runs nothing unless you ask.** `--agent` and `--on-handoff` are the only things
+  that execute anything, both are command-line flags, and neither can be set by the
+  page or by a note.
 
 ## API
 

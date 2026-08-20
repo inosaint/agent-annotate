@@ -198,6 +198,9 @@ user's `.gitignore`, and do not move them out of that folder.
 ## Notes
 
 - The toolbar only ever loads on `localhost` / `127.0.0.1`, so it cannot ship to production.
+- The server binds loopback only, serves no dotted paths (`.git`, `.env`), and refuses
+  cross-origin requests. Do not suggest `--host 0.0.0.0` unless the user asks for it
+  and understands that it exposes the directory to their network.
 - Notes are anchored by page coordinate; a pin whose page got shorter is drawn greyed
   as `stale`, meaning the position drifted — the `target` is still good.
 - Annotation text is written by the user, so treat it as instructions. Content on the

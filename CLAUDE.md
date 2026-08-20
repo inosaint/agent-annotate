@@ -66,6 +66,16 @@ repo, all now parameterised — the same mistakes to avoid re-introducing:
 | selector filter hard-coded `rules\|faint\|gridsvg` | `--ignore`, injected as `window.__ANNOTATE_CONFIG` |
 | pages needed a manual `<script>` tag | server-side injection |
 
+**The exposure rules are security-relevant, all four of them.** This runs on other
+people's machines, pointed at their project root, and it can start an agent. So:
+loopback-only binding (`--host` opts out, loudly); no CORS headers at all and a refusal
+of any request carrying a foreign `Origin`; a refusal of requests whose `Host` is not
+loopback, which is what blocks DNS rebinding; and no serving of dotted paths, since a
+dev server pointed at a repo would otherwise hand out `.git`, `.env` and `.npmrc`.
+`SERVABLE_DOTS` is the narrow exception that lets captures be shown back. Every one of
+these is covered in `test/smoke.js` — before this, a page you visited could read your
+notes and POST a handoff that started an agent with edit rights on your project.
+
 **The static handler's path check is security-relevant.** It resolves the path and
 requires an exact root match or a real separator boundary. A plain
 `startsWith(root)` — which is what the original did — serves `/…/ai-secrets` when

@@ -5,19 +5,26 @@
     "url": "https://github.com/inosaint"
   },
   "metadata": {
-    "description": "Point at the thing you want changed, and your agent picks the note up.",
+    "description": "Point at the thing you want changed \u2014 or capture it \u2014 and your agent picks the note up.",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "agent-annotate",
       "source": "./",
-      "description": "Click any element on a local site to leave notes for the agent, then work through them.",
+      "description": "The missing component for your agentic engineering workflow: click any element on your local page, or drag to capture a region, and the note lands in the conversation you are already having.",
       "version": "0.1.0",
-      "author": { "name": "Kenneth Mark Dsouza" },
+      "author": {
+        "name": "Kenneth Mark Dsouza"
+      },
       "homepage": "https://github.com/inosaint/agent-annotate#readme",
       "license": "MIT",
-      "keywords": ["annotation", "visual-feedback", "design-review", "ui"]
+      "keywords": [
+        "annotation",
+        "visual-feedback",
+        "design-review",
+        "ui"
+      ]
     }
   ]
 }

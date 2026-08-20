@@ -20,6 +20,7 @@ if (has('--help') || has('-h')) {
   Options
     --root <dir>      directory to serve            (default: cwd)
     --port <n>        port, 0 picks a free one      (default: 8765)
+    --host <addr>     interface to bind        (default: 127.0.0.1, loopback only)
     --store <file>    annotations file  (default: <root>/.annotate/annotations.json)
     --index <file>    directory index               (default: index.html)
     --ignore <a,b>    runtime-only classes to keep out of selectors
@@ -81,6 +82,7 @@ const server = createServer({
   store: opt('store', null),
   index: opt('index', 'index.html'),
   ignoreClasses: (opt('ignore', '') || '').split(',').map(s => s.trim()).filter(Boolean),
+  host: opt('host', null),
   onHandoff: opt('on-handoff', null),
   agent: has('--agent'),
   quiet: has('--quiet')
@@ -96,7 +98,9 @@ server.on('error', err => {
   process.exit(1);
 });
 
-server.listen(port);
+// loopback by default: this serves a directory and can start an agent, and neither
+// belongs on a network the user has not thought about
+server.listen(port, opt('host', '127.0.0.1'));
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => server.close(() => process.exit(0)));
 }

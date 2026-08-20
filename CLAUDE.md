@@ -17,7 +17,8 @@ on disk is still named `annotate-loop`** — only the package was renamed.
       either was free; the repo name won. The name still lives in three places —
       `package.json` (`name` and `bin`), `.claude-plugin/plugin.json`, and the `npx`
       lines in the README and the skill — plus `bin/agent-annotate.js` and
-      `skills/agent-annotate/` on disk.
+      `skills/annotate/` on disk (the skill is deliberately *not* called
+      `agent-annotate` — see below).
 - [x] `repository`, `homepage`, `bugs` and `author` are in `package.json`.
 - [ ] `LICENSE` is MIT in the name of Kenneth Mark Dsouza. Confirm that's wanted.
 - [ ] `npm publish --dry-run` for a final look.
@@ -146,7 +147,7 @@ lib/server.js                 server + programmatic API (createServer)
 lib/agent.js                  the built-in --agent handoff: prompt and tool list
 client/context.js             what kind of element was clicked, and which controls suit it
 client/annotate.js            the toolbar, served at /__annotate/client.js
-skills/agent-annotate/SKILL.md Claude Code skill — teaches an agent the workflow
+skills/annotate/SKILL.md      Claude Code skill — teaches an agent the workflow
 .claude-plugin/plugin.json    plugin manifest; the package doubles as a CC plugin
 test/context.js               unit test for the context table
 test/agent.js                 unit test for the handoff agent's command
@@ -163,8 +164,13 @@ global `fetch`).
 
 ## When changing things
 
-- Any new element kind or control also belongs in `skills/agent-annotate/SKILL.md`'s
+- Any new element kind or control also belongs in `skills/annotate/SKILL.md`'s
   list of `context.kind` values — that list is how an agent knows what it may receive.
+- **The skill is `annotate`, not `agent-annotate`.** Claude Code invokes a plugin skill
+  as `/<plugin>:<skill>`, so matching names read as `/agent-annotate:agent-annotate`,
+  and a description opening with the product name says it a third time. Keep the skill
+  name distinct from the plugin name, and keep the product name out of the first line
+  of its description.
 - The version lives in **four** places: `package.json`, `.claude-plugin/plugin.json`,
   `.claude-plugin/marketplace.json` (twice — `metadata` and the plugin entry), and any
   README example. Keep them in step.
@@ -178,5 +184,5 @@ global `fetch`).
 - `package.json`'s `files` array gates the tarball. A new top-level directory needs
   adding there or it will not publish. Check with `npm pack --dry-run`.
 - Editing the workflow (routes, flags, the resolve rule) means editing
-  `skills/agent-annotate/SKILL.md` too — that file is how an agent learns this tool,
+  `skills/annotate/SKILL.md` too — that file is how an agent learns this tool,
   and a stale skill is worse than none.

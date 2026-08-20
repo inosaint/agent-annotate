@@ -1,9 +1,9 @@
 ---
-name: agent-annotate
-description: Run the agent-annotate dev server so the user can click elements on their local site and leave visual feedback, then read those notes from annotations.json, act on them, and resolve them. Use when the user wants to give feedback by pointing at a page, mentions annotations or pins, asks to "review the UI visually", or says they have left notes on a page.
+name: annotate
+description: Serve a local site with a toolbar the user can click elements in to leave visual feedback, then pick those notes up, triage them, act on them and resolve them. Use when the user wants to give feedback by pointing at a page, mentions annotations or pins, asks to "review the UI visually", or says they have left notes on a page.
 ---
 
-# agent-annotate
+# Annotate
 
 A feedback loop for visual work. The user points at the thing on the page, types
 what should change, and those notes arrive as structured JSON you read directly.

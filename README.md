@@ -189,8 +189,9 @@ already having rather than in a log. The plugin carries the server with it — t
 runs `$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js`, so there is nothing to install from
 npm.
 
-The skill lives in `skills/agent-annotate/`; it is what teaches an agent to triage a
-batch, act on it, and resolve only what it actually finished.
+The skill lives in `skills/annotate/`, and is invoked as `/agent-annotate:annotate`.
+It is what teaches an agent to triage a batch, act on it, and resolve only what it
+actually finished.
 
 ## API
 

@@ -1,0 +1,6 @@
+{
+  "name": "agent-annotate",
+  "description": "Click any element on a local site to leave notes for the agent, then work through them.",
+  "version": "0.1.0",
+  "license": "MIT"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "agent-annotate",
+  "version": "0.1.0",
+  "description": "Click any element on your local site, leave a note, and your coding agent reads it. A dev server plus an injected annotation toolbar — no framework, no source changes.",
+  "type": "commonjs",
+  "author": "Kenneth Mark Dsouza <kennethmdesouza@gmail.com>",
+  "repository": { "type": "git", "url": "git+https://github.com/inosaint/agent-annotate.git" },
+  "homepage": "https://github.com/inosaint/agent-annotate#readme",
+  "bugs": "https://github.com/inosaint/agent-annotate/issues",
+  "main": "lib/server.js",
+  "bin": { "agent-annotate": "bin/agent-annotate.js" },
+  "files": ["bin", "lib", "client", "skills", ".claude-plugin", "README.md"],
+  "engines": { "node": ">=18" },
+  "keywords": [
+    "annotation", "feedback", "design-review", "dev-server",
+    "claude", "claude-code", "agent", "ai", "visual-feedback"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "test": "node test/context.js && node test/agent.js && node test/wait.js && node test/smoke.js"
+  }
+}

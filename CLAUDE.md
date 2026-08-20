@@ -12,6 +12,11 @@ on disk is still named `annotate-loop`** — only the package was renamed.
 
 ## Unfinished before publishing
 
+- [x] **Published to npm as `agent-annotate@0.1.0` on 2026-08-20.** Verified from the
+      registry: installs clean, serves, refuses `.env` and foreign origins, binds
+      loopback. The GitHub repo is also its own plugin marketplace, so **both routes
+      must be kept in step** — a push that lags a publish means plugin users get
+      different code from npm users.
 - [x] The package was renamed from `annotate-loop` to **`agent-annotate`** on
       2026-08-20 to match the GitHub repo. Both names 404 on the npm registry, so
       either was free; the repo name won. The name still lives in three places —
@@ -20,8 +25,10 @@ on disk is still named `annotate-loop`** — only the package was renamed.
       `skills/annotate/` on disk (the skill is deliberately *not* called
       `agent-annotate` — see below).
 - [x] `repository`, `homepage`, `bugs` and `author` are in `package.json`.
-- [ ] `LICENSE` is MIT in the name of Kenneth Mark Dsouza. Confirm that's wanted.
-- [ ] `npm publish --dry-run` for a final look.
+- [x] `LICENSE` is MIT in the name of Kenneth Mark Dsouza, and that is what shipped.
+      The npm page carries `kennethmdesouza@gmail.com` publicly as the maintainer
+      address — removable in `package.json` and `.claude-plugin/plugin.json` if that
+      is ever unwanted.
 
 ## Known verification gap
 
@@ -29,11 +36,15 @@ on disk is still named `annotate-loop`** — only the package was renamed.
 element) then `test/smoke.js` (the server end to end — injection, store, resolve, the
 path-escape guard, and a note carrying `context`/`intents`). Both pass.
 
-**The toolbar UI in `client/annotate.js` still has never been click-tested.** The
-browser extension was disconnected during the original port and was disconnected
-again on 2026-08-19 when the contextual controls and the glass restyle went in — so
-no pin has ever been dropped, saved, or deleted through the real UI, and the popup's
-chips, dropdowns and the read-back card are unexercised.
+**The toolbar has now been used for real** (2026-08-20, by the author, against a real
+site): pins dropped and saved, chips-only notes, region captures uploaded, batches
+handed off and picked up by a waiting agent, notes resolved. Several bugs came out of
+exactly that — pin digits off-centre under `box-sizing:border-box`, the send bar
+vanishing on hover, a card printing its own text twice.
+
+**Still unexercised by hand:** editing a note through the pin card (the re-find and
+re-target path), the breadcrumb on a deep tree, and everything in a browser that is
+not Chrome.
 
 To check: `npx . --root <any static dir>`, open the page, press **A**, hover (the
 element under the cursor should outline with a size label), click a paragraph (expect

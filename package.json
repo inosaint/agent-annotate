@@ -9,7 +9,7 @@
   "bugs": "https://github.com/inosaint/agent-annotate/issues",
   "main": "lib/server.js",
   "bin": { "agent-annotate": "bin/agent-annotate.js" },
-  "files": ["bin", "lib", "client", "skills", ".claude-plugin", "README.md"],
+  "files": ["bin", "lib", "client", "skills", ".claude-plugin", "README.md", "LICENSE"],
   "engines": { "node": ">=18" },
   "keywords": [
     "annotation", "feedback", "design-review", "dev-server",

@@ -165,8 +165,16 @@ global `fetch`).
 
 - Any new element kind or control also belongs in `skills/agent-annotate/SKILL.md`'s
   list of `context.kind` values — that list is how an agent knows what it may receive.
-- The version lives in **three** places: `package.json`, `.claude-plugin/plugin.json`,
-  and any README example. Keep them in step.
+- The version lives in **four** places: `package.json`, `.claude-plugin/plugin.json`,
+  `.claude-plugin/marketplace.json` (twice — `metadata` and the plugin entry), and any
+  README example. Keep them in step.
+- The repo is its own plugin marketplace. After touching either manifest, run
+  `claude plugin validate .` — it is clean apart from one warning about `CLAUDE.md` not
+  being loaded as plugin context, which is expected: this file is notes for the next
+  session working *on* the repo, not context to ship to users of the plugin.
+- The plugin ships the server, so the skill must reach for
+  `$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js` before `npx` — a plugin that only works
+  once the npm package is published is not deliverable.
 - `package.json`'s `files` array gates the tarball. A new top-level directory needs
   adding there or it will not publish. Check with `npm pack --dry-run`.
 - Editing the workflow (routes, flags, the resolve rule) means editing

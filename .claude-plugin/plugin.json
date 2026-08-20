@@ -2,5 +2,13 @@
   "name": "agent-annotate",
   "description": "Click any element on a local site to leave notes for the agent, then work through them.",
   "version": "0.1.0",
-  "license": "MIT"
+  "author": {
+    "name": "Kenneth Mark Dsouza",
+    "email": "kennethmdesouza@gmail.com",
+    "url": "https://github.com/inosaint"
+  },
+  "homepage": "https://github.com/inosaint/agent-annotate#readme",
+  "repository": "https://github.com/inosaint/agent-annotate",
+  "license": "MIT",
+  "keywords": ["annotation", "visual-feedback", "design-review", "dev-server", "ui"]
 }

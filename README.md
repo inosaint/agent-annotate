@@ -169,17 +169,28 @@ annotations-resolved.json
 
 ## With Claude Code
 
-This package doubles as a Claude Code plugin. Installed, it teaches the agent to start
-the server, read your notes, act on them, and resolve only what it actually finished:
+This package doubles as a Claude Code plugin, and the repo is its own marketplace:
 
 ```
-/plugin install agent-annotate
+/plugin marketplace add inosaint/agent-annotate
+/plugin install agent-annotate@agent-annotate
 ```
 
-Or point Claude Code at a local checkout of this repo — the skill lives in
-`skills/agent-annotate/`. Once installed, `/agent-annotate` starts the server, tells
-you the URL, and leaves `--wait` running in the background so the notes you send land
-in the conversation you are already having.
+Working on it locally instead:
+
+```bash
+claude plugin marketplace add ./
+claude plugin install agent-annotate@agent-annotate
+```
+
+Installed, `/agent-annotate` starts the server, tells you the URL, and leaves `--wait`
+running in the background, so the notes you send land in the conversation you are
+already having rather than in a log. The plugin carries the server with it — the skill
+runs `$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js`, so there is nothing to install from
+npm.
+
+The skill lives in `skills/agent-annotate/`; it is what teaches an agent to triage a
+batch, act on it, and resolve only what it actually finished.
 
 ## API
 

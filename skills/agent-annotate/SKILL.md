@@ -13,6 +13,16 @@ It suits design iteration where describing *which* element in prose is the slow 
 
 Two commands, both in the background so you stay responsive.
 
+If you are running as the installed plugin, use the copy that shipped with it —
+`$CLAUDE_PLUGIN_ROOT` is set for you, and it needs no npm install:
+
+```bash
+node "$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js" --root .
+```
+
+Otherwise `npx agent-annotate --root .` fetches it from npm. Both take the same
+flags; the rest of this file writes it the short way.
+
 **1. Serve the project:**
 
 ```bash

@@ -1,34 +1,32 @@
 # agent-annotate
 
-The missing component for your agentic engineering workflow while working with Claude terminal app and developing HTML pages. (if you are building react apps, check out [Agentation](agentation.com))
+The missing component for your agentic engineering workflow while working with the Claude terminal app and developing HTML pages. (If you are building React apps, check out [Agentation](https://agentation.com).)
 
-Describing *which* thing you mean is the slow part of design iteration. The current meta is referring to it and taking screenshots to be specific. Codex and Claude desktop apps have a built-in annotator to help you debug, but for the terminal, I don't see a similar solution so I asked Claude to create one for me.
+Describing *which* thing you mean is the slow part of design iteration. The current meta is referring to it and taking screenshots to be specific. Codex and Claude desktop apps have a built-in annotator to help you debug, but for the terminal I don't see a similar solution — so I asked Claude to create one for me.
 
 ## How this works
 
-Once you install the plugin(and reload), you can call it by `/agent-annotate:annotate` in your Claude Code terminal app.
+Install the plugin, reload, and call it with `/agent-annotate:annotate` in your Claude Code terminal app.
 
-This wil start a local server and hosts your simple HTML and provides the URL. It also leaves `--wait`
-running in the background, so the notes you send land in the conversation you are
-already having rather than in a log. 
-
+That starts a local server, hosts your HTML, and gives you the URL. It also leaves `--wait` running in the background, so the notes you send land in the conversation you are already having rather than in a log.
 
 ## How to use
 
-At the bottom right of the page, you will notice a tiny toolbar which you can use to annotate the page.
+At the bottom right of the page you will find a small toolbar.
 
-<img width="173" height="68" alt="Screenshot 2026-08-20 at 1 24 08 PM" src="https://github.com/user-attachments/assets/25b23573-db07-435c-8cd5-62ac8daff128" />
+<img width="173" alt="The toolbar: camera, notes and annotate icons" src="https://github.com/user-attachments/assets/25b23573-db07-435c-8cd5-62ac8daff128" />
 
+1. **With the annotate tool** — click the annotate icon (or press <kbd>A</kbd>), then click any element on your page and say what should change. The note carries the element it points at, what kind of element it is, the page, the viewport and the theme.
 
-1. **With the annotate tool**: Click on the annotate icon (or type A to enable) and then click any element on your local site, say what should change, and your coding agent reads the note — with the element it points at, what kind of element it is, the page, the viewport and the theme attached.
+   <img width="652" alt="Annotating an element: the picker popup with tone and length controls" src="https://github.com/user-attachments/assets/8015e109-ae3c-4580-b059-3d1be582a8f4" />
 
-<img width="652" height="449" alt="Screenshot 2026-08-20 at 8 48 24 AM" src="https://github.com/user-attachments/assets/8015e109-ae3c-4580-b059-3d1be582a8f4" />
+2. **With the camera tool** — click the camera icon (or press <kbd>S</kbd>) and drag over the part of the page you mean. You may need to grant screen-share permission the first time. Once captured, add whatever you want to say about it.
 
-3. **With the camera tool**: Click the Camera icon in the tool(or type S to enable) and then capture a screenshot of your page. You may need to provide screenshare permissions to capture the image. Once captured, you can added the changes you want to provide.
+   <img width="652" alt="Reviewing a captured region before adding a note" src="https://github.com/user-attachments/assets/3b6cfd12-7e5d-4538-abf0-e9a714f25ad1" />
 
-<img width="813" height="635" alt="Screenshot 2026-08-20 at 1 17 56 PM" src="https://github.com/user-attachments/assets/3b6cfd12-7e5d-4538-abf0-e9a714f25ad1" />
+When you are done, press **send to agent** in the notes list — or the send icon on a single note — and Claude starts working on them.
 
-Once done, you can click 'send to agent' or the 'send' icon at the annotation level to get Claude working on your annotations.
+---
 
 Note: Text below this is written by Claude.
 
@@ -71,8 +69,23 @@ Note: Text below this is written by Claude.
 ## Starting the agent
 
 Notes are worth acting on once you say they are, so the list has a **send to agent**
-button, and each note has one of its own. Sending marks those notes `"status":
-"ready"` — a note you are still typing is never in that set.
+bar, and a note's own card has a send icon. Sending marks those notes
+`"status": "ready"` — a note you are still typing is never in that set.
+
+**If an agent is already in a conversation with you**, it should block on this in the
+background — which is what `/agent-annotate:annotate` sets up for you:
+
+```bash
+npx agent-annotate --wait --root .
+```
+
+That serves nothing. It waits until you press the button, prints the batch, and exits,
+which is what puts the notes in front of the agent you are already talking to.
+
+**If nobody is watching**, `--agent` starts a fresh headless Claude Code per batch
+instead. It gets the batch, the store and every measured fact in its prompt, edits the
+project it is serving, and resolves what it finished. The trade is that it starts cold
+every time.
 
 
 ### Triage
@@ -89,7 +102,7 @@ wrong, it does the unambiguous part and comes back with the question rather than
 guessing — a pin often lands on a wrapper when you meant something inside it.
 
 Whatever it prints comes straight back to the page, in a panel that streams while it
-works, and is kept in `annotations-agent.log` next to the store.
+works, and is kept in `.annotate/annotations-agent.log`.
 
 If you would rather run something else — your own script, a different agent, a
 webhook — `--on-handoff <cmd>` replaces `--agent` entirely. It runs with
@@ -98,9 +111,41 @@ whatever it prints is shown on the page the same way. This is the only thing the
 to be passed explicitly on the command line — there is no config file that can set it,
 and nothing on the page can change it.
 
+## What a note carries
+
+```json
+{
+  "text": "make these lines wobbly",
+  "target": "section.mo > h3",
+  "page": "index.html",
+  "x": 278, "y": 1398,
+  "viewport": "1446x703",
+  "theme": "light",
+  "context": {
+    "kind": "heading", "label": "heading", "tag": "h3",
+    "facts": ["412×38", "24px/1.2 600", "rgb(20, 22, 26)", "5 words"]
+  },
+  "intents": [{ "id": "tone", "label": "tone: punchier" }],
+  "id": "amsyvcaio2ij",
+  "created": "2026-08-18T16:20:07.104Z",
+  "status": "open"
+}
+```
+
+`target` and `x`/`y` are what make a note actionable — an agent can find the element
+rather than guess at your prose. `context` is that element read off the live page: its
+`kind` (one of `heading`, `text`, `layout`, `action`, `field`, `list`, `table`, `image`,
+`icon`, `graphic`, `media`, `page`, `element`) and `facts` measured at the moment you
+clicked — box size, computed `display` and `gap`, font size and colour, word count, a
+missing `alt`. `intents` are the chips you picked, in plain words.
+
+A capture is the other shape of note: `"shot": "shots/<id>.png"`, whatever you typed,
+and nothing else. It is not about an element, so it carries no `target` or `context` —
+the agent reads the image and works out what it is about from there.
+
 ## Working through notes
 
-Read `annotations.json`, make the changes, then mark them done:
+Read `.annotate/annotations.json`, make the changes, then mark them done:
 
 ```bash
 curl -s -X POST localhost:8765/__annotations/resolve \
@@ -111,12 +156,20 @@ Omit `ids` to resolve everything open. Resolved notes move to
 `annotations-resolved.json` with a timestamp, so the live queue stays short and you
 keep the history.
 
-Add both to `.gitignore` — they're local working state, not site content:
+Nothing to add to your `.gitignore`. Everything this writes lives in one folder that
+ignores itself:
 
 ```
-annotations.json
-annotations-resolved.json
+.annotate/
+  .gitignore                  *
+  annotations.json            the queue
+  annotations-resolved.json   what has been dealt with
+  annotations-agent.log       what the agent said, run by run
+  shots/                      captured regions
 ```
+
+Cleaning up is deleting that directory. A project that already has an
+`annotations.json` at its root — from an earlier version — keeps using it.
 
 ## With Claude Code
 
@@ -134,7 +187,7 @@ claude plugin marketplace add ./
 claude plugin install agent-annotate@agent-annotate
 ```
 
-Installed, `/agent-annotate` starts the server, tells you the URL, and leaves `--wait`
+Installed, `/agent-annotate:annotate` starts the server, tells you the URL, and leaves `--wait`
 running in the background, so the notes you send land in the conversation you are
 already having rather than in a log. The plugin carries the server with it — the skill
 runs `$CLAUDE_PLUGIN_ROOT/bin/agent-annotate.js`, so there is nothing to install from

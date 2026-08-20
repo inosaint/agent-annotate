@@ -15,7 +15,14 @@
   const NS = 'an-shot';
   let track = null, video = null;
 
-  const supported = () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  // why it cannot capture, when it cannot: the three causes want different answers
+  function unsupported() {
+    if (!window.isSecureContext) return 'the page is not a secure context — serve it over localhost or https';
+    if (!navigator.mediaDevices) return 'this browser exposes no mediaDevices here';
+    if (!navigator.mediaDevices.getDisplayMedia) return 'this browser cannot capture a tab';
+    return null;
+  }
+  const supported = () => !unsupported();
 
   async function stream() {
     if (track && track.readyState === 'live') return track;
@@ -102,5 +109,5 @@
     });
   }
 
-  window.__ANNOTATE_SHOT = { supported, select, grab, release };
+  window.__ANNOTATE_SHOT = { supported, unsupported, select, grab, release };
 })();

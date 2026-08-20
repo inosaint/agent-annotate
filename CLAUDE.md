@@ -169,10 +169,13 @@ test/agent.js                 unit test for the handoff agent's command
 test/smoke.js                 server end to end; both run under npm test
 ```
 
-`/__annotate/client.js` is `context.js` then `annotate.js` concatenated, in that
-order — annotate.js reads `window.__ANNOTATE_CONTEXT`, and it degrades to a plain
-note popup if that is missing. A new client file must be added to the `CLIENT` array
-in `lib/server.js`.
+`/__annotate/client.js` is `context.js`, `shot.js` and `annotate.js` concatenated, in
+that order — annotate.js reads `window.__ANNOTATE_CONTEXT` and `window.__ANNOTATE_SHOT`,
+and degrades if either is missing. A new client file must be added to the `CLIENT`
+array in `lib/server.js`. **Adding one means restarting any running server**: the files
+are read per request, but the list of them is built at module load, so a server started
+before the file existed silently serves a bundle without it — which looks exactly like
+a browser lacking the feature.
 
 Zero runtime dependencies, and it should stay that way. Node >= 18 (the tests use
 global `fetch`).

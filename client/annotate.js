@@ -434,7 +434,7 @@
       el.textContent=i+1; el.title=(p.stale?'[position stale] ':'')+p.text;
       el.onclick=e=>{e.stopPropagation();view(p,i);};
       layer.appendChild(el);
-      const kind=p.context&&p.context.label, ready=p.status==='ready';
+      const kind=p.shot?'capture':p.context&&p.context.label, ready=p.status==='ready';
       const li=document.createElement('li');
       if(ready) li.className='sent';
       li.innerHTML=`<b>${i+1}</b>`+
@@ -614,7 +614,7 @@
       :(p.intents||[]).map(t=>`<span class="an-chip on">${esc(t.label)}</span>`).join('');
     pop.innerHTML=`${p.shot?`<img class="an-thumb" src="${esc(shotURL(p))}" alt="">`:''}
       <div class="an-facts"><span class="an-kind">#${i+1}${
-        p.context?' '+esc(p.context.label):''}</span> ${esc(p.target||'')}</div>
+        p.shot?' capture':p.context?' '+esc(p.context.label):''}</span> ${esc(p.target||'')}</div>
       <div class="an-read">${esc(p.text)}</div>
       ${bits?`<div class="an-ctl" style="margin-top:8px">${bits}</div>`:''}
       <div class="btns">
@@ -630,7 +630,7 @@
   }
 
   /* ---- the annotate popup ---- */
-  function inspect(el,x,y,note,shot){
+  function inspect(el,x,y,note){
     closePops();
     sel=el;
     const pop=document.createElement('div'); pop.className='an-pop';
@@ -652,8 +652,7 @@
         : `<button class="an-chip" data-id="${c.id}">${esc(c.label)}</button>`;
       const chain=chainOf(sel);
       const snip=snippet(sel);
-      pop.innerHTML=`${shot?`<img class="an-thumb" src="${shot.dataURL}" alt="">`:''}${
-        note?`<div class="an-facts" style="margin-bottom:5px">
+      pop.innerHTML=`${note?`<div class="an-facts" style="margin-bottom:5px">
           <span class="an-kind">editing</span> was “${esc(note.text)}”</div>`:''}
         <div class="an-crumbs">${chain.map((n,i)=>
           `${i?'<span class="an-sep">›</span>':''}<button class="an-crumb${
@@ -723,7 +722,6 @@
           (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')};
       if(ctx) rec.context={kind:ctx.kind,label:ctx.label,tag:ctx.tag,role:ctx.role,facts:ctx.facts};
       if(picked.length) rec.intents=picked;
-      if(!note&&shot) rec.shot=true;      // filled in by the upload below
       if(note){
         const r=await fetch(API+'?id='+encodeURIComponent(note.id),{method:'PATCH',
           headers:{'Content-Type':'application/json'},
@@ -733,11 +731,7 @@
       } else {
         const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify(rec)}).then(r=>r.json()).catch(()=>null);
-        if(r&&r.ok){
-          rec.id=r.id;
-          if(shot) rec.shot=await uploadShot(r.id,shot)||undefined;
-          pins.push(rec);
-        }
+        if(r&&r.ok){ rec.id=r.id; pins.push(rec); }
       }
       render();
       done();
@@ -750,10 +744,10 @@
      Drag, then a note popup opens on that region with the shot attached. The upload
      waits for the note to exist, so a capture the user abandons leaves no file. */
   const SHOT=window.__ANNOTATE_SHOT;
-  let pending=null;                        // {dataURL,width,height} awaiting a note id
-
   async function capture(){
-    if(!SHOT||!SHOT.supported()) return toast('this browser cannot capture the tab',true);
+    if(!SHOT) return toast('capture module missing — restart the server',true);
+    const why=SHOT.unsupported();
+    if(why) return toast('cannot capture: '+why,true);
     arm(false); closePops();
     const rect=await SHOT.select();
     if(!rect) return;
@@ -765,11 +759,44 @@
     catch(e){ toast(/denied|abort/i.test(e.message)?'capture cancelled':'capture failed: '+e.message,true); }
     finally { chrome.forEach(n=>n.classList.remove('an-hidden')); }
     if(!shot) return;
-    pending=shot;
-    // the element under the middle of the selection is what the note is about
-    const el=document.elementFromPoint(rect.x+rect.w/2,rect.y+rect.h/2);
-    inspect(el&&!el.closest(OURS)?el:document.body,
-      rect.x+scrollX, rect.y+rect.h+scrollY, null, shot);
+    shotNote(shot,rect);
+  }
+
+  /* A capture is not about an element, so it gets none of the element furniture —
+     no breadcrumb, no measured facts, no chips. The picture is the note; the words
+     are optional. */
+  function shotNote(shot,rect){
+    closePops();
+    const pop=document.createElement('div'); pop.className='an-pop';
+    pop.dataset.glass='anGlassShot';
+    pop.innerHTML=`<img class="an-thumb" src="${shot.dataURL}" alt="">
+      <div class="an-facts"><span class="an-kind">capture</span> ${shot.width}×${shot.height}</div>
+      <textarea placeholder="Anything to say about it? (optional)"></textarea>
+      <div class="btns"><button data-a="cancel" title="Discard (Esc)">${I.x}</button>
+      <button class="primary" data-a="save" title="Save (Cmd/Ctrl+Enter)">${I.check}</button></div>`;
+    document.body.appendChild(pop);
+    const x=rect.x+scrollX, y=rect.y+rect.h+scrollY;
+    place(pop,x,y);
+    const ta=pop.querySelector('textarea'); ta.focus();
+    const close=()=>pop.remove();
+    const save=async()=>{
+      const rec={text:ta.value.trim()||'see the capture',x,y,page:pageId(),
+        viewport:innerWidth+'x'+innerHeight,
+        theme:document.documentElement.getAttribute('data-theme')||
+          (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')};
+      const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(rec)}).then(r=>r.json()).catch(()=>null);
+      if(r&&r.ok){
+        rec.id=r.id;
+        rec.shot=await uploadShot(r.id,shot)||undefined;
+        pins.push(rec); render();
+      }
+      close();
+    };
+    pop.querySelector('[data-a="cancel"]').onclick=close;
+    pop.querySelector('[data-a="save"]').onclick=save;
+    ta.onkeydown=e=>{ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) save();
+                      if(e.key==='Escape'){ e.stopPropagation(); close(); } };
   }
 
   async function uploadShot(id,shot){

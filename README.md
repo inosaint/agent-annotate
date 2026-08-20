@@ -57,6 +57,10 @@ in dark mode or at one width.
 agent reads before deciding anything. Some feedback is unsayable — *this* card, not
 those three; the way the spacing collapses here — and a picture ends the argument.
 
+A capture is its own kind of note. It carries the picture, optionally something you
+typed, and nothing else: no element path, no measured facts, no chips. It is not about
+an element, so it does not pretend to be.
+
 `context` is the element read off the live page: its `kind` (one of `heading`, `text`,
 `layout`, `action`, `field`, `list`, `table`, `image`, `icon`, `graphic`, `media`,
 `page`, `element`) and `facts` measured at the moment of the click — box size, computed

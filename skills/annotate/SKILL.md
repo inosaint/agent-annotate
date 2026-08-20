@@ -83,6 +83,8 @@ coordinates — together they tell you *what* the user meant, which is the whole
 
 A note may also carry **`shot`** — a PNG of a region the user dragged, written next to
 the store (`annotations-shots/<id>.png`). **Read that image before deciding anything.**
+A capture is deliberately bare: the picture, whatever they typed, and nothing else —
+no `target`, no `context`, no `intents`. Work out what it is about from the image.
 It is what they were actually looking at, and a captured region usually carries what
 the words could not: which of four similar cards, where the spacing collapses, what
 the misalignment looks like.

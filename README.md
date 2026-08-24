@@ -32,18 +32,28 @@ Note: Text below this is written by Claude.
 
 ## Install
 
-There is nothing to install if you use it through the plugin above — the plugin ships
-the server. From npm, either run it without installing:
+One command, on a machine that has Claude Code:
+
+```bash
+npx agent-annotate install
+```
+
+That stages the plugin under `~/.agent-annotate/marketplace` and registers it with the
+`claude` CLI, so your next session has the `/agent-annotate:annotate` skill — which
+starts the server, gives you the URL, and waits for your notes in the background. It
+stages rather than registering the package where npx put it, because npx unpacks into a
+temp cache that gets cleaned up; staging is also what makes the plugin and the npm
+package the same files. `--dry-run` shows what it would do, `--root <dir>` stages
+somewhere else, and `--no-claude` stages only and prints the two `claude` commands for
+you to run yourself.
+
+Or just run the server, with nothing installed and no plugin involved:
 
 ```bash
 npx agent-annotate --root .
 ```
 
-(This runs the server. It does **not** install the Claude Code plugin — that is
-`claude plugin marketplace add inosaint/agent-annotate`, see [With Claude
-Code](#with-claude-code).)
-
-or install it, globally or into the project:
+To keep it around, install it globally or into the project:
 
 ```bash
 npm install -g agent-annotate     # then: agent-annotate --root .
@@ -210,24 +220,24 @@ Cleaning up is deleting that directory. A project that already has an
 
 ## With Claude Code
 
-This package doubles as a Claude Code plugin, and the repo is its own marketplace:
+This package doubles as a Claude Code plugin, and the repo is its own marketplace.
+`npx agent-annotate install` is the short way in; these are the same thing by hand,
+from a session:
 
 ```
 /plugin marketplace add inosaint/agent-annotate
 /plugin install agent-annotate@agent-annotate
 ```
 
-The same thing from a terminal, which is what to run on a machine that has none of
-this yet:
+or from a terminal:
 
 ```bash
 claude plugin marketplace add inosaint/agent-annotate
 claude plugin install agent-annotate@agent-annotate
 ```
 
-Note that this is not what `npx agent-annotate` does — that runs the server, and knows
-nothing about Claude Code's plugin registry. The two routes are independent: the plugin
-for the skill and the background `--wait`, npm for the bare server.
+The difference between these and the installer is where the plugin comes from: these
+track the GitHub repo, the installer uses the npm version you just pulled.
 
 Working on it locally instead:
 

@@ -161,6 +161,15 @@ is built in (`lib/agent.js`) rather than left as a script each user has to write
 It is spawned as argv, never through a shell, so nothing a note contains can reach a
 command line, and it runs with cwd set to the served root.
 
+**The installer stages a copy; it never registers the running package.** `npx` unpacks
+into a temp cache that is garbage-collected, so a marketplace registered at that path
+goes stale without warning — which is why `install` copies the payload to
+`~/.agent-annotate/marketplace` first and hands *that* to `claude plugin marketplace
+add`. The copy list is `package.json`'s `files` array, so the rule about adding a new
+top-level directory there now covers the plugin route as well as the tarball. It refuses
+to write over a directory whose `.claude-plugin/marketplace.json` does not name this
+marketplace, because `--root` points it at a path the user chose.
+
 **There was briefly a `--mode auto|manual` flag. It was removed on 2026-08-20 as
 config the tool should not own** — whether an agent may act unattended is a property
 of the agent, not of an annotation server. What remains is the behaviour that
@@ -215,6 +224,7 @@ That file is notes for this repo, like this one — keep it out of `package.json
 bin/agent-annotate.js         CLI, arg parsing only
 lib/server.js                 server + programmatic API (createServer)
 lib/agent.js                  the built-in --agent handoff: prompt and tool list
+lib/install.js                `install`: stage the plugin, register it with the claude CLI
 client/context.js             what kind of element was clicked, and which controls suit it
 client/shot.js                region capture via getDisplayMedia, cropped to the drag
 client/annotate.js            the toolbar, served at /__annotate/client.js
@@ -222,6 +232,7 @@ skills/annotate/SKILL.md      Claude Code skill — teaches an agent the workflo
 .claude-plugin/plugin.json    plugin manifest; the package doubles as a CC plugin
 test/context.js               unit test for the context table
 test/agent.js                 unit test for the handoff agent's command
+test/install.js               unit test for the plugin installer's staging
 test/smoke.js                 server end to end; both run under npm test
 ```
 
@@ -250,6 +261,11 @@ global `fetch`).
   `placeList()` is the model. The report panel still sits in the corner.
 - `CHANGELOG.md` ships in the tarball and is what npm and GitHub show. Add to it in
   the same change that earns the entry, not at release time.
+- The plugin can now be installed two ways that come from different places — `npx
+  agent-annotate install` stages the published npm payload, while `/plugin marketplace
+  add inosaint/agent-annotate` tracks the repo. That is the "keep both routes in step"
+  rule with teeth: a publish that lags a push now shows up as two people running
+  different code from the same command.
 - The version lives in **four** places: `package.json`, `.claude-plugin/plugin.json`,
   `.claude-plugin/marketplace.json` (twice — `metadata` and the plugin entry), and any
   README example. Keep them in step.

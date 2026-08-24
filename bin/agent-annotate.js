@@ -16,6 +16,11 @@ if (has('--help') || has('-h')) {
 
   Usage
     npx agent-annotate [options]
+    npx agent-annotate install [--root <dir>] [--dry-run] [--no-claude]
+
+  install adds this as a Claude Code plugin, so a session gets the
+  /agent-annotate:annotate skill. It stages the plugin under
+  ~/.agent-annotate/marketplace and registers that with the claude CLI.
 
   Options
     --root <dir>      directory to serve            (default: cwd)
@@ -40,6 +45,22 @@ if (has('--help') || has('-h')) {
   notes are only marked ready for an agent you run yourself.
 `);
   process.exit(0);
+}
+
+/* install: not a server at all — put the plugin where Claude Code will find it */
+if (argv[0] === 'install') {
+  const { install } = require('../lib/install');
+  try {
+    process.exit(install({
+      root: opt('root', null),
+      dryRun: has('--dry-run'),
+      claude: !has('--no-claude'),
+      quiet: has('--quiet')
+    }));
+  } catch (err) {
+    console.error(`\n  agent-annotate: ${err.message}\n`);
+    process.exit(1);
+  }
 }
 
 /* --wait: no server, just block until the user presses send */

@@ -3,6 +3,28 @@
 All notable changes to `agent-annotate`. This project follows [semantic
 versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-08-24
+
+### Added
+
+- **`npx agent-annotate install` installs the Claude Code plugin.** Getting the
+  `/agent-annotate:annotate` skill onto a new machine previously meant knowing the two
+  `claude plugin` incantations; the npm package now does it. Because npx unpacks into a
+  temp cache that is garbage-collected, the plugin is staged at
+  `~/.agent-annotate/marketplace` first and *that* path is registered — so the plugin
+  and the npm package are the same files, and a marketplace cannot go stale under you.
+  `--root` stages elsewhere, `--dry-run` prints what it would do, `--no-claude` stages
+  and leaves the two commands for you to run. It refuses to write over a directory it
+  cannot see it staged itself.
+
+### Documentation
+
+- **An install section, and an FAQ.** The README never actually said how to install
+  either half. It now carries both routes and says plainly which is which, plus the
+  answer to the first thing anyone hits: this serves files, so it cannot sit in front of
+  `astro dev` — build and serve the output, and use `--wait` rather than `--agent` when
+  you do, since the agent runs with its working directory set to the root it serves.
+
 ## [0.1.1] — 2026-08-24
 
 ### Added

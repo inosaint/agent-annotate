@@ -39,6 +39,10 @@ the server. From npm, either run it without installing:
 npx agent-annotate --root .
 ```
 
+(This runs the server. It does **not** install the Claude Code plugin — that is
+`claude plugin marketplace add inosaint/agent-annotate`, see [With Claude
+Code](#with-claude-code).)
+
 or install it, globally or into the project:
 
 ```bash
@@ -212,6 +216,18 @@ This package doubles as a Claude Code plugin, and the repo is its own marketplac
 /plugin marketplace add inosaint/agent-annotate
 /plugin install agent-annotate@agent-annotate
 ```
+
+The same thing from a terminal, which is what to run on a machine that has none of
+this yet:
+
+```bash
+claude plugin marketplace add inosaint/agent-annotate
+claude plugin install agent-annotate@agent-annotate
+```
+
+Note that this is not what `npx agent-annotate` does — that runs the server, and knows
+nothing about Claude Code's plugin registry. The two routes are independent: the plugin
+for the skill and the background `--wait`, npm for the bare server.
 
 Working on it locally instead:
 

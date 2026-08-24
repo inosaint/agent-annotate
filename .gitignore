@@ -3,4 +3,5 @@ node_modules/
 annotations.json
 annotations-resolved.json
 .DS_Store
+index-2.html
 *.tgz

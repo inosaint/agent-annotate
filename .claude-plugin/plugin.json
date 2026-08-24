@@ -1,7 +1,7 @@
 {
   "name": "agent-annotate",
   "description": "The missing component for your agentic engineering workflow: click any element on your local page, or drag to capture a region, and the note lands in the conversation you are already having.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Kenneth Mark Dsouza",
     "email": "kennethmdesouza@gmail.com",

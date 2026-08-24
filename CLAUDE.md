@@ -44,7 +44,13 @@ vanishing on hover, a card printing its own text twice.
 
 **Still unexercised by hand:** editing a note through the pin card (the re-find and
 re-target path), the breadcrumb on a deep tree, and everything in a browser that is
-not Chrome.
+not Chrome. **Everything added in 0.1.1 is also unexercised by hand** — the browser
+extension was not connected when it was written, so the selection path, the drag, the
+list dismissal and the key shielding have only been reasoned about and unit-tested.
+Check them first: highlight a sentence and press `A` (the popup should open on that
+paragraph with the words quoted in the box), drag the grip and reload (the bar should
+come back where it was left), open the list and click the page (it should close), and
+type a space into a note on a page that binds space.
 
 To check: `npx . --root <any static dir>`, open the page, press **A**, hover (the
 element under the cursor should outline with a size label), click a paragraph (expect
@@ -98,6 +104,22 @@ means editing that table and nothing else; the popup renders whatever it finds.
 `describe()` also measures the live element (`facts`) — computed display, gap, font,
 word count, missing `alt`. Those facts are the part an agent cannot recover from the
 source, so prefer adding facts over adding chips.
+
+**The toolbar's keys stop at the toolbar.** `shield(el)` on each of our roots calls
+`stopPropagation` in the *bubble* phase, so a field's own handlers still run and the
+page's document-level handlers never fire — which is what lets a note be typed on top
+of a slide deck bound to space. It must stay bubble-phase on our own roots: a
+capture-phase stop at `window` would skip the target's handlers too, and the global
+`A`/`S`/`Esc` listener is capture-phase for the same reason — it has to run before the
+shield. No slide detection is involved anywhere, and none should be added: the fix is
+about our panels, not about what kind of page they sit on.
+
+**A selection is already the user pointing.** With text highlighted, `A` skips the
+picker: the element holding the range becomes the target and the words are quoted into
+the box. The exact string is kept as `selection.text` beside `text` — same rule as
+intents, never merged in. `mousedown` on the toolbar is prevented so that clicking the
+button does not collapse the selection before the click lands; that is the whole reason
+`held` exists.
 
 **Intents are saved beside the free text, never merged into it.** `text` stays what
 the user typed, `intents` is the structured list. The one exception: chips picked with
@@ -174,6 +196,19 @@ OS. Keep the base sheet free of `${}` interpolation; the build step asserts on i
 `annotations-resolved.json` with a timestamp. Resolve only notes actually addressed —
 that rule is in the skill and is the point of the endpoint, not a nicety.
 
+## What is planned next
+
+`plan-v0.2.0.md` holds the agreed design for **remote review** — a hosted collector that takes
+notes from people who are not at this machine, and a `pull` that merges them into the local
+queue. Read it before touching the client's `fetch` calls or the note shape; it depends on
+both. Its load-bearing invariant, which belongs beside the exposure rules above: **the hosted
+half never executes anything.** The collector has no handoff route, no command and no
+filesystem, so a compromised collector yields spam in a queue rather than a breach, and
+remote notes reach an agent only when the creator presses the button on this machine. Do not
+add a remote trigger, however handy it looks.
+
+That file is notes for this repo, like this one — keep it out of `package.json`'s `files`.
+
 ## Layout
 
 ```
@@ -210,6 +245,11 @@ global `fetch`).
   and a description opening with the product name says it a third time. Keep the skill
   name distinct from the plugin name, and keep the product name out of the first line
   of its description.
+- The bar is draggable and remembers its spot in `localStorage` per page, so anything
+  that positions a panel must read the bar's rect rather than the viewport corner —
+  `placeList()` is the model. The report panel still sits in the corner.
+- `CHANGELOG.md` ships in the tarball and is what npm and GitHub show. Add to it in
+  the same change that earns the entry, not at release time.
 - The version lives in **four** places: `package.json`, `.claude-plugin/plugin.json`,
   `.claude-plugin/marketplace.json` (twice — `metadata` and the plugin entry), and any
   README example. Keep them in step.

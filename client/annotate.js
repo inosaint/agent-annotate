@@ -11,6 +11,15 @@
   // classes the host app adds at runtime and that would only add noise to a selector
   const IGNORE=new RegExp('^('+(CFG.ignoreClasses||[]).concat(['an-armed']).join('|')+')$');
   const OURS='.an-bar,.an-pop,.an-list,.an-pin,.an-hl,.an-hltag';
+  // everything of ours that can take a click or a keystroke — wider than OURS,
+  // which is only about what the picker is allowed to point at
+  const MINE=OURS+',.an-report,.an-toast,.an-shot-dim,.an-shot-box,.an-shot-tip,.an-review-back';
+  /* A page with key handling of its own — a slide deck, an editor, a game — must not
+     act on keys typed into our panels: space must type a space, not advance a slide.
+     Stopping at our own root, in the bubble phase, lets the field's own handlers run
+     first and still keeps the page from ever seeing the key. */
+  const shield=el=>['keydown','keyup','keypress']
+    .forEach(t=>el.addEventListener(t,e=>e.stopPropagation()));
   let armed=false, pins=[], sel=null;
 
   /* ---- a readable path to whatever was clicked ---- */
@@ -53,7 +62,8 @@
     camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.7l1.2-2.1a1 1 0 0 1 .9-.5h5.4a1 1 0 0 1 .9.5L16.8 7h2.7A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/><circle cx="12" cy="13" r="3.4"/></svg>',
     trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.7"/><path d="M6.5 6.5 7.4 19a1.2 1.2 0 0 0 1.2 1.1h6.8a1.2 1.2 0 0 0 1.2-1.1l.9-12.5"/><path d="M10.3 10v6.3M13.7 10v6.3"/></svg>',
     check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
-    x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+    x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    grip:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9.6" cy="6.4" r="1.45"/><circle cx="14.4" cy="6.4" r="1.45"/><circle cx="9.6" cy="12" r="1.45"/><circle cx="14.4" cy="12" r="1.45"/><circle cx="9.6" cy="17.6" r="1.45"/><circle cx="14.4" cy="17.6" r="1.45"/></svg>'
   };
 
   /* ---- ui ----
@@ -74,6 +84,7 @@
       --an-cast:0 10px 34px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35);
       border-color:rgba(255,255,255,.2);text-shadow:0 1px 0 rgba(0,0,0,.3)}
   ${p} .an-bar button:hover{background:rgba(255,255,255,.16)}
+  ${p} .an-bar .an-grip:hover{background:rgba(255,255,255,.16)}
   ${p} .an-bar .an-count{box-shadow:0 1px 5px rgba(0,0,0,.5),0 0 0 1.5px rgba(22,24,30,.75)}
   ${p} .an-hltag{--an-frost:rgba(16,18,24,.9)}
   ${p} .an-pop .an-crumb:hover{background:rgba(255,255,255,.16)}
@@ -123,6 +134,13 @@
   .an-bar button:active{transform:scale(.94)}
   .an-bar button.on{background:linear-gradient(160deg,#e0613e,var(--an-accent));color:#fff;
     text-shadow:none;box-shadow:0 3px 14px rgba(196,68,42,.5),inset 0 1px 0 rgba(255,255,255,.45)}
+  .an-bar .an-grip{display:grid;place-items:center;width:17px;height:34px;border-radius:999px;
+    color:var(--an-dim);cursor:grab;touch-action:none;
+    transition:color .18s,background .18s}
+  .an-bar .an-grip svg{width:15px;height:15px;display:block;opacity:.8}
+  .an-bar .an-grip:hover{color:var(--an-ink);background:rgba(255,255,255,.4)}
+  .an-bar.an-dragging{transition:none}
+  .an-bar.an-dragging,.an-bar.an-dragging .an-grip{cursor:grabbing}
   .an-bar #anList{position:relative;overflow:visible}
   .an-bar .an-count{position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;padding:0 4px;
     border-radius:999px;display:grid;place-items:center;font-size:9px;font-weight:600;
@@ -366,14 +384,19 @@
     el.style.setProperty('--an-glass','url(#'+id+')');
   }
 
+  /* Everything of ours is found *inside* this element, never by document id: the page
+     we are injected into may have furniture of its own, and an id collision would hand
+     our handlers to somebody else's button. */
   const bar=document.createElement('div');
   bar.className='an-bar';
   bar.innerHTML=`<button id="anList" title="Notes on this page" aria-label="Notes">${I.notes}
       <span class="an-count" id="anCount" hidden>0</span></button>
     <button id="anShot" title="Capture a region — press S" aria-label="Capture">${I.camera}</button>
-    <button id="anTog" title="Inspect and annotate — press A" aria-label="Inspect">${I.inspect}</button>`;
+    <button id="anTog" title="Inspect and annotate — press A" aria-label="Inspect">${I.inspect}</button>
+    <span class="an-grip" id="anGrip" title="Drag to move the toolbar" aria-hidden="true">${I.grip}</span>`;
   document.body.appendChild(bar);
   const list=document.createElement('ul'); list.className='an-list'; document.body.appendChild(list);
+  shield(bar); shield(list);
   glassFor(bar,'anGlassBar',999);
   const hl=document.createElement('div'); hl.className='an-hl'; document.body.appendChild(hl);
   const hlTag=document.createElement('div'); hlTag.className='an-hltag'; document.body.appendChild(hlTag);
@@ -402,7 +425,7 @@
   addEventListener('resize',()=>{ if(sel) highlight(sel); });
 
   function render(){
-    const c=document.getElementById('anCount');
+    const c=bar.querySelector('#anCount');
     c.textContent=pins.length>99?'99+':pins.length; c.hidden=!pins.length;
     [...layer.children].forEach(n=>n.remove());
     list.innerHTML='';
@@ -486,6 +509,7 @@
         <span class="an-kind">agent</span><span class="met"></span>
         <button title="Close">${I.x}</button></div><pre></pre>`;
       document.body.appendChild(pop);
+      shield(pop);
       pop.querySelector('button').onclick=()=>pop.remove();
       glassFor(pop,'anGlassReport',17);
     }
@@ -535,6 +559,7 @@
     const t=document.createElement('div');
     t.className='an-pop an-toast'+(bad?' bad':''); t.textContent=msg;
     document.body.appendChild(t);
+    shield(t);
     t.style.left=(scrollX+innerWidth-t.offsetWidth-16)+'px';
     t.style.top=(scrollY+innerHeight-t.offsetHeight-70)+'px';
     setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); },bad?6000:2600);
@@ -577,6 +602,7 @@
       <div class="btns"><button data-a="cancel" title="Cancel (Esc)">${I.x}</button>
       <button class="primary" data-a="save" title="Save (Cmd/Ctrl+Enter)">${I.check}</button></div>`;
     document.body.appendChild(pop);
+    shield(pop);
     const ta=pop.querySelector('textarea'); ta.value=p.text;
     place(pop,Math.min(p.x,scrollX+innerWidth-40),Math.max(p.y,scrollY+20));
     ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
@@ -636,6 +662,7 @@
         ${p.status==='ready'?'':`<button data-a="send" title="Send to agent">${I.send}</button>`}
         <button data-a="close" title="Close">${I.x}</button></div>`;
     document.body.appendChild(pop);
+    shield(pop);
     place(pop,Math.min(p.x,scrollX+innerWidth-40),Math.max(p.y,scrollY+20));
     pop.querySelector('[data-a="close"]').onclick=()=>pop.remove();
     pop.querySelector('[data-a="edit"]').onclick=()=>edit(p,i);
@@ -644,16 +671,21 @@
   }
 
   /* ---- the annotate popup ---- */
-  function inspect(el,x,y,note){
+  function inspect(el,x,y,note,quote){
     closePops();
     sel=el;
     const pop=document.createElement('div'); pop.className='an-pop';
     document.body.appendChild(pop);
+    shield(pop);
     if(note) pop.dataset.glass='anGlassEdit';
     // a note saved from chips alone has synthesised text; leave the box empty so it
     // re-synthesises rather than freezing yesterday's wording into the record
     const synth=(note&&note.intents||[]).map(t=>t.label).join('; ');
     let text=note?(note.text===synth?'':note.text):'';
+    // the quoted words open the box so the user writes *around* them; the whole
+    // string is kept separately, never merged into what they typed
+    const quoted=quote||(note&&note.selection&&note.selection.text)||'';
+    if(quote&&!text) text='\u201c'+(quote.length>300?quote.slice(0,300)+'\u2026':quote)+'\u201d\n';
 
     function paint(){
       highlight(sel);
@@ -722,7 +754,8 @@
 
     // what the user picked, in the order they picked it — saved beside the free text
     const intents=new Map((note&&note.intents||[]).map(t=>[t.id,t]));
-    function done(){ pop.remove(); sel=null; unhighlight(); }
+    // every way out of the popup also disarms: no path may leave the picker live
+    function done(){ pop.remove(); arm(false); sel=null; unhighlight(); }
 
     async function save(){
       const picked=[...intents.values()];
@@ -736,12 +769,15 @@
           (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')};
       if(ctx) rec.context={kind:ctx.kind,label:ctx.label,tag:ctx.tag,role:ctx.role,facts:ctx.facts};
       if(picked.length) rec.intents=picked;
+      if(quoted) rec.selection={text:quoted.slice(0,2000)};
       if(note){
         const r=await fetch(API+'?id='+encodeURIComponent(note.id),{method:'PATCH',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({text:body,intents:picked,target:rec.target,context:rec.context})
+          body:JSON.stringify({text:body,intents:picked,target:rec.target,context:rec.context,
+                               selection:rec.selection})
         }).then(r=>r.json()).catch(()=>null);
-        if(r&&r.ok) Object.assign(note,{text:body,intents:picked,target:rec.target,context:rec.context});
+        if(r&&r.ok) Object.assign(note,{text:body,intents:picked,target:rec.target,
+                                        context:rec.context,selection:rec.selection});
       } else {
         const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify(rec)}).then(r=>r.json()).catch(()=>null);
@@ -794,6 +830,7 @@
     document.body.appendChild(back);
     pop.classList.add('an-review');
     document.body.appendChild(pop);
+    shield(pop);
     const x=rect.x+scrollX, y=rect.y+rect.h+scrollY;
     centre(pop);
     const ta=pop.querySelector('textarea'); ta.focus();
@@ -827,21 +864,119 @@
     return r&&r.ok?r.shot:null;
   }
 
+  /* ---- text the user highlighted ----
+     Highlighting is already the user saying *this bit here*. Pressing A then should
+     not make them say it a second time with the picker, so the element holding the
+     selection becomes the target, the words are quoted into the box to write around,
+     and the exact string is kept on the note so the agent can find it in the source. */
+  function grabSelection(){
+    const s=typeof getSelection==='function'?getSelection():null;
+    if(!s||s.isCollapsed||!s.rangeCount) return null;
+    const text=String(s).trim().replace(/\s+/g,' ');
+    if(!text) return null;
+    const r=s.getRangeAt(0);
+    let el=r.commonAncestorContainer;
+    if(el&&el.nodeType!==1) el=el.parentElement;
+    if(!el||!el.closest||el.closest(MINE)) return null;
+    const box=r.getBoundingClientRect();
+    return {text,el,x:box.left+scrollX,y:box.bottom+scrollY};
+  }
+
+  /* Pressing the button would normally collapse the selection before the click ever
+     lands, so the words are read on mousedown and the collapse prevented outright.
+     Anything that moves the selection afterwards drops what was held. */
+  let held=null;
+  bar.addEventListener('mousedown',e=>{
+    if(!e.target.closest||!e.target.closest('#anTog')) return;
+    held=grabSelection();
+    if(held) e.preventDefault();
+  });
+  document.addEventListener('selectionchange',()=>{ held=null; });
+
   /* ---- arming ---- */
+  // pressing A with something selected annotates that text; otherwise it is the picker
+  function start(){
+    const q=armed?null:(held||grabSelection());
+    held=null;
+    if(!q) return arm(!armed);
+    arm(false);
+    inspect(q.el,q.x,q.y,null,q.text);
+  }
   function arm(on){
     armed=on;
     document.body.classList.toggle('an-armed',on);
-    const b=document.getElementById('anTog');
+    const b=bar.querySelector('#anTog');
     b.classList.toggle('on',on);
     b.title=on?'Click an element — Esc to cancel':'Inspect and annotate — press A';
     if(!on && !document.querySelector('.an-pop')) unhighlight();
   }
-  document.getElementById('anTog').onclick=()=>arm(!armed);
-  document.getElementById('anShot').onclick=capture;
-  document.getElementById('anList').onclick=()=>{
-    list.classList.toggle('show');
-    if(list.classList.contains('show')) glassFor(list,'anGlassList',17);
+  bar.querySelector('#anTog').onclick=start;
+  bar.querySelector('#anShot').onclick=capture;
+  bar.querySelector('#anList').onclick=()=>showList(!list.classList.contains('show'));
+
+  /* ---- the notes list ----
+     It hangs off the bar rather than off the corner, since the bar moves. Clicking
+     anywhere else means the user is looking at the page again, so it gets out of
+     the way instead of sitting over what they are trying to see. */
+  function placeList(){
+    const r=bar.getBoundingClientRect(), m=8, w=list.offsetWidth, h=list.offsetHeight;
+    let top=r.top-h-10;
+    if(top<m) top=Math.min(r.bottom+10,innerHeight-h-m);
+    list.style.left=Math.max(m,Math.min(r.right-w,innerWidth-w-m))+'px';
+    list.style.top=Math.max(m,top)+'px';
+    list.style.right='auto'; list.style.bottom='auto';
+  }
+  function showList(on){
+    list.classList.toggle('show',!!on);
+    if(on){ glassFor(list,'anGlassList',17); placeList(); }
+  }
+  addEventListener('pointerdown',e=>{
+    if(!list.classList.contains('show')) return;
+    if(e.target.closest&&e.target.closest('.an-list,.an-bar')) return;
+    showList(false);
+  },true);
+
+  /* ---- the bar can be dragged ----
+     It sits on top of somebody else's page, and whatever it covers is exactly what
+     they may want to annotate. The grip is the affordance; the spot is remembered
+     per page, and clamped back into view when the window changes size. */
+  const POS='an-bar-pos:'+pageId();
+  function moveBar(left,top){
+    const m=8, w=bar.offsetWidth, h=bar.offsetHeight;
+    left=Math.max(m,Math.min(left,innerWidth-w-m));
+    top =Math.max(m,Math.min(top ,innerHeight-h-m));
+    bar.style.left=left+'px'; bar.style.top=top+'px';
+    bar.style.right='auto'; bar.style.bottom='auto';
+    if(list.classList.contains('show')) placeList();
+    return {left,top};
+  }
+  const grip=bar.querySelector('#anGrip');
+  grip.onpointerdown=e=>{
+    e.preventDefault();
+    const r=bar.getBoundingClientRect(), dx=e.clientX-r.left, dy=e.clientY-r.top;
+    bar.classList.add('an-dragging');
+    try{ grip.setPointerCapture(e.pointerId); }catch{}
+    const move=ev=>moveBar(ev.clientX-dx,ev.clientY-dy);
+    const up=ev=>{
+      grip.removeEventListener('pointermove',move);
+      grip.removeEventListener('pointerup',up);
+      grip.removeEventListener('pointercancel',up);
+      bar.classList.remove('an-dragging');
+      const pos=moveBar(ev.clientX-dx,ev.clientY-dy);
+      try{ localStorage.setItem(POS,JSON.stringify(pos)); }catch{}
+    };
+    grip.addEventListener('pointermove',move);
+    grip.addEventListener('pointerup',up);
+    grip.addEventListener('pointercancel',up);
   };
+  try{
+    const saved=JSON.parse(localStorage.getItem(POS)||'null');
+    if(saved) requestAnimationFrame(()=>moveBar(saved.left,saved.top));
+  }catch{}
+  addEventListener('resize',()=>{
+    if(bar.style.left) moveBar(parseFloat(bar.style.left),parseFloat(bar.style.top));
+    else if(list.classList.contains('show')) placeList();
+  });
 
   addEventListener('mousemove',e=>{
     if(!armed) return;
@@ -849,12 +984,16 @@
     if(!t||t.closest&&t.closest(OURS)) return unhighlight();
     highlight(t);
   },true);
+  // capture phase: our panels stop keys from bubbling to the page, and this has to
+  // run before that shield does, or Esc inside a popup would reach nothing
   addEventListener('keydown',e=>{
     if(e.target.matches&&e.target.matches('textarea,input,select')) return;
-    if(e.key==='a'||e.key==='A') arm(!armed);
-    if(e.key==='s'||e.key==='S') capture();
-    if(e.key==='Escape'){ arm(false); closePops(); sel=null; unhighlight(); }
-  });
+    // both of these focus a textarea, and the keystroke that opened it would otherwise
+    // be typed into the box we just focused
+    if(e.key==='a'||e.key==='A'){ e.preventDefault(); start(); }
+    if(e.key==='s'||e.key==='S'){ e.preventDefault(); capture(); }
+    if(e.key==='Escape'){ arm(false); closePops(); showList(false); sel=null; unhighlight(); }
+  },true);
   addEventListener('click',e=>{
     if(!armed) return;
     if(e.target.closest(OURS)) return;

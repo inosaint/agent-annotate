@@ -36,7 +36,7 @@ Note: Text below this is written by Claude.
 
 | | |
 |---|---|
-| `A` | arm the picker |
+| `A` | arm the picker — or, with text highlighted, annotate that text straight away |
 | `S` | capture a region — drag over the part you mean |
 | click | drop a pin on that element |
 | `Cmd`/`Ctrl` + `Enter` | save |
@@ -46,6 +46,11 @@ Note: Text below this is written by Claude.
 | list icon | every note on this page, with the count on the icon; the bin deletes a row |
 | **send to agent** | at the top of the list — hands the whole batch over |
 | click a pin | read that note back, then edit it or send it on its own |
+| grip | drag the dots at the right of the toolbar to move it out of your way |
+
+Keys typed into the toolbar stay in the toolbar: a page that binds space or the arrow
+keys — a slide deck, an editor — never sees them, so you can type a note on top of one
+without driving it. Clicking anywhere outside the notes list closes the list.
 
 **On the command line**
 
@@ -139,6 +144,11 @@ rather than guess at your prose. `context` is that element read off the live pag
 `icon`, `graphic`, `media`, `page`, `element`) and `facts` measured at the moment you
 clicked — box size, computed `display` and `gap`, font size and colour, word count, a
 missing `alt`. `intents` are the chips you picked, in plain words.
+
+When a note was written from highlighted text, it also carries `"selection": { "text":
+"…" }` — the exact words you had selected, kept whole beside what you typed, so the
+agent can find that string in the source rather than infer it. The quote is dropped
+into the note box too, for you to write around.
 
 A capture is the other shape of note: `"shot": "shots/<id>.png"`, whatever you typed,
 and nothing else. It is not about an element, so it carries no `target` or `context` —

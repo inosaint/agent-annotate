@@ -100,6 +100,24 @@ server.listen(0, async () => {
     });
     ok('send-all skips notes already with the agent', all.sent === 1);
 
+    // a note written from highlighted text keeps the exact words beside what was typed
+    const quoted = await j('/__annotations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: '\u201cship it fast\u201d\nthis is too breathless', target: 'p', page: 'index.html',
+        selection: { text: 'ship it fast' }
+      })
+    });
+    const withSel = (await j('/__annotations')).find(a => a.id === quoted.id);
+    ok('keeps the highlighted text on the note', withSel.selection.text === 'ship it fast');
+    await fetch(base + '/__annotations?id=' + quoted.id, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'too breathless', selection: { text: 'ship it fast' } })
+    });
+    const stillSel = (await j('/__annotations')).find(a => a.id === quoted.id);
+    ok('and through an edit', stillSel.selection.text === 'ship it fast');
+    await fetch(base + '/__annotations?id=' + quoted.id, { method: 'DELETE' });
+
     const again = await j('/__annotations/handoff', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: [post.id] })

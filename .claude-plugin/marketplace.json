@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Point at the thing you want changed \u2014 or capture it \u2014 and your agent picks the note up.",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "plugins": [
     {
       "name": "agent-annotate",
       "source": "./",
       "description": "The missing component for your agentic engineering workflow: click any element on your local page, or drag to capture a region, and the note lands in the conversation you are already having.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Kenneth Mark Dsouza"
       },

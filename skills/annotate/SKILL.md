@@ -72,6 +72,7 @@ Notes land in `.annotate/annotations.json`:
   "x": 278, "y": 1398, "viewport": "1446x703", "theme": "light",
   "context": { "kind": "heading", "label": "heading", "tag": "h3",
                "facts": ["412×38", "24px/1.2 600", "rgb(20, 22, 26)", "5 words"] },
+  "selection": { "text": "the five words they highlighted" },
   "intents": [ { "id": "tone", "label": "tone: punchier" },
                { "id": "length", "label": "length: shorter" } ],
   "id": "amsyvcaio2ij", "created": "…", "status": "open" }
@@ -103,6 +104,10 @@ was clicked:
   font size, line height, weight and colour for copy, word counts, missing `alt`,
   link targets. Trust them over what you infer from the source; they are what the
   user was actually looking at.
+- **`selection`** appears when the note was written from text the user had highlighted:
+  `{ "text": "…" }`, the exact words, capped at 2000 characters. It is the literal
+  string they were pointing at — find *that* in the source rather than guessing from
+  `target` alone, and note that the same quote also opens the `text` they typed.
 - **`intents`** are the chips and dropdowns the user picked in the popup — a short,
   unambiguous verb list such as `flow: side by side` or `drop the jargon`. Treat them
   as part of the instruction, not decoration. When the user picked chips and typed

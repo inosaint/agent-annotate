@@ -81,6 +81,8 @@
         removeEventListener('mousemove', move, true);
         removeEventListener('mouseup', up, true);
         removeEventListener('keydown', key, true);
+        removeEventListener('keyup', key, true);
+        removeEventListener('keypress', key, true);
         resolve(r);
       };
       const paint = (x, y) => {
@@ -101,11 +103,15 @@
         // a click rather than a drag means they changed their mind
         done(r.w > 8 && r.h > 8 ? r : null);
       };
-      const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } };
+      // dragging a region is a modal moment: a page with its own key handling — a
+      // slide deck, say — must not advance under the overlay while it is up
+      const key = e => { e.stopPropagation(); if (e.key === 'Escape') done(null); };
       addEventListener('mousedown', down, true);
       addEventListener('mousemove', move, true);
       addEventListener('mouseup', up, true);
       addEventListener('keydown', key, true);
+      addEventListener('keyup', key, true);
+      addEventListener('keypress', key, true);
     });
   }
 

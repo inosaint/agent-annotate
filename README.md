@@ -30,6 +30,28 @@ When you are done, press **send to agent** in the notes list — or the send ico
 
 Note: Text below this is written by Claude.
 
+## Install
+
+There is nothing to install if you use it through the plugin above — the plugin ships
+the server. From npm, either run it without installing:
+
+```bash
+npx agent-annotate --root .
+```
+
+or install it, globally or into the project:
+
+```bash
+npm install -g agent-annotate     # then: agent-annotate --root .
+npm install -D agent-annotate     # then: npx agent-annotate --root .
+```
+
+Node 18 or newer. Zero dependencies.
+
+It serves static files: point `--root` at a directory of HTML and the toolbar is
+injected into every page it serves. Using a framework instead — Astro, Eleventy, Next,
+Vite? See the [FAQ](#faq).
+
 ## Using it
 
 **In the page**
@@ -207,6 +229,68 @@ npm.
 The skill lives in `skills/annotate/`, and is invoked as `/agent-annotate:annotate`.
 It is what teaches an agent to triage a batch, act on it, and resolve only what it
 actually finished.
+
+## FAQ
+
+**Does it work with Astro (or Next, Vite, Eleventy, Hugo)?**
+
+Yes, against the build output. This is a static file server, not a proxy, so it cannot
+sit in front of `astro dev` — that server produces the HTML, and only the server that
+produces the HTML can inject the toolbar into it. Build, then serve what was built:
+
+```bash
+npx astro build                       # writes dist/
+npx agent-annotate --root dist        # open the URL it prints, press A
+```
+
+Or as one loop you can re-run after each round of changes:
+
+```json
+{
+  "scripts": {
+    "annotate": "astro build && npx agent-annotate --root dist --ignore 'astro-.*'"
+  }
+}
+```
+
+Notes then point at the built HTML — a pin records `main > section.hero > h1`, which is
+the `<h1>` in your `.astro` component. So make the change in `src/`, run `npm run
+annotate` again, and carry on. Two things worth knowing:
+
+- **Use `--wait`, not `--agent`.** `--agent` starts a fresh Claude Code with its working
+  directory set to the root it is serving — for a build that is `dist/`, where every edit
+  is thrown away by the next build. `--wait` hands the batch to the agent you are already
+  talking to, which is in your project root. The plugin's `/agent-annotate:annotate` does
+  this for you.
+- **`--ignore` earns its keep here.** Frameworks hang generated classes off elements
+  (`astro-j7pv25f6`, hashed CSS-module names), and those change on every build. Each
+  entry is matched against the whole class name as a regular expression, so a prefix
+  needs writing as one — `--ignore 'astro-.*'`, not `--ignore astro-`. That keeps them
+  out of the recorded selector, so a note written before a rebuild still points at the
+  same element after it.
+
+The same recipe works for anything with a static output directory: `next build && next
+export` (`out/`), `vite build` (`dist/`), `eleventy` (`_site/`), `hugo` (`public/`).
+
+**Can I just add a `<script>` tag to the page my own dev server serves?**
+
+No, and deliberately. The toolbar talks to `/__annotations` on its own origin, and the
+server refuses any request carrying a foreign `Origin` — otherwise any page you had open
+could read your notes or POST a handoff that starts an agent with write access to your
+project. Loading the script from port 8765 into a page on port 4321 fails that check.
+
+**Will it show up on my deployed site?**
+
+It cannot. The toolbar is only ever injected by this dev server, which you run yourself,
+and even then the client returns immediately unless the page's hostname is `localhost` or
+`127.0.0.1`. Nothing about it is in your source, so there is nothing to strip before you
+ship.
+
+**Which browsers?**
+
+Chromium is what the design was tuned against. Safari and Firefox work, but the panels
+fall back to plain frosted blur — the glass depends on `backdrop-filter: url(#…)`, which
+only Chromium honours.
 
 ## What it exposes
 
